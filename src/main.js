@@ -71,6 +71,19 @@ function stackSprite(img){
 const volumes=new WeakMap();
 const ships=names.map((_,i)=>makeShip(i)),rock=makeRock(),mine=makeMine();
 [...ships,rock,mine].forEach(img=>volumes.set(img,stackSprite(img)));
+function makeBackdrop(){
+ const b=document.createElement("canvas");b.width=120;b.height=160;const g=b.getContext("2d");g.imageSmoothingEnabled=false;
+ g.fillStyle="#050a18";g.fillRect(0,0,120,160);
+ // Pixel clusters form distant nebulae; restrained values keep hazards readable.
+ const cloud=(cx,cy,rx,ry,color,step)=>{g.fillStyle=color;for(let y=-ry;y<=ry;y+=step)for(let x=-rx;x<=rx;x+=step){const n=Math.sin((x+cx)*.31)*Math.cos((y+cy)*.27);if((x*x/(rx*rx)+y*y/(ry*ry))<.78+n*.13)g.fillRect(cx+x,cy+y,step,step);}};
+ cloud(24,38,31,25,"#101a39",4);cloud(91,87,35,28,"#17102f",4);cloud(58,132,27,17,"#0c1c36",3);
+ let seed=913;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+ for(let i=0;i<155;i++){const x=Math.floor(rnd()*120),y=Math.floor(rnd()*160),v=rnd();g.fillStyle=v>.91?"#b9f8ff":v>.65?"#577da9":"#26385f";g.fillRect(x,y,v>.94?2:1,v>.94?2:1);}
+ g.fillStyle="#1d3155";for(let y=0;y<160;y+=20)g.fillRect(0,y,120,1);
+ return b;
+}
+const backdrop=makeBackdrop();
+
 function drawStack(img,x,y,size,angle=0){ctx.save();ctx.translate(Math.round(x),Math.round(y));ctx.rotate(angle);ctx.imageSmoothingEnabled=false;ctx.drawImage(volumes.get(img)||img,-size*.62,-size*.62,size*1.24,size*1.24);ctx.imageSmoothingEnabled=true;ctx.restore();}
 function picker(){shipPicker.innerHTML=names.map((n,i)=>'<button type="button" data-ship="'+i+'" class="'+(ship===i?"selected":"")+'" aria-pressed="'+(ship===i)+'" '+(running?"disabled":"")+'>'+n+'</button>').join("");shipPicker.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{if(running)return;ship=Number(b.dataset.ship);localStorage.setItem("neon-dodge-ship",String(ship));picker();draw();
 updateSpecialButton();powerupStatus.textContent="Nave selecionada: "+names[ship]+". A escolha fica bloqueada ao iniciar.";}));shipPicker.classList.toggle("locked",running);}
@@ -210,7 +223,7 @@ function drawSpecialCinematic(){
  ctx.fillStyle="#e8f7ff";ctx.font="bold 9px monospace";ctx.fillText("SYSTEM OVERRIDE  ·  03 SEC",cx,H*.948);
  ctx.restore();
 }
-function draw(){ctx.clearRect(0,0,W,H);ctx.fillStyle="#080c1d";ctx.fillRect(0,0,W,H);ctx.strokeStyle="#17213e";ctx.lineWidth=1;for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+function draw(){ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;ctx.drawImage(backdrop,0,0,W,H);ctx.imageSmoothingEnabled=true;ctx.strokeStyle="#1b2945";ctx.globalAlpha=.28;ctx.lineWidth=1;for(let x=0;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}ctx.globalAlpha=1;
  obstacles.forEach(o=>{ctx.shadowBlur=13;ctx.shadowColor=o.type==="mine"?"#ff4e9b":"#9ba8cc";drawStack(o.type==="mine"?mine:rock,o.x+o.w/2,o.y+o.h/2,o.w,o.spin?o.angle:0);});ctx.shadowBlur=0;
  pickups.forEach(p=>{ctx.save();ctx.translate(p.x,p.y);if(p.type==="coin"){ctx.rotate(Math.sin(p.phase)*.12);ctx.shadowBlur=20;ctx.shadowColor="#ffd45a";ctx.fillStyle="#ffd45a";ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#fff5bd";ctx.lineWidth=3;ctx.stroke();ctx.fillStyle="#80500b";ctx.font="bold 17px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("$",0,1);}else{const color=p.type==="shield"?"#50f6ed":"#b8a0ff";ctx.strokeStyle=color;ctx.fillStyle=color+"22";ctx.lineWidth=4;ctx.shadowBlur=15;ctx.shadowColor=color;ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle="#fff";ctx.font="bold 13px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(p.type==="shield"?"S":"L",0,1);}ctx.restore();});
  drawShip();particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life*1.8);ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,4,4);});ctx.globalAlpha=1;if(specialCinematic>0)drawSpecialCinematic();

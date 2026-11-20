@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#090b18">
   <meta name="description" content="Neon Dodge — a fast, free arcade survival game.">
   <title>Neon Dodge — Arcade Survival</title>
-  <link rel="stylesheet" href="./styles.css?v=gameplay-fix-3">
+  <link rel="stylesheet" href="./styles.css?v=layout-thrust-readme-4">
 </head>
 <body>
   <main class="shell">
@@ -21,6 +21,7 @@
         <div class="status" id="status">READY</div>
         <button id="sound-button" class="icon-button" type="button" aria-label="Toggle sound" title="Toggle sound">♪</button>
       </div>
+      <div class="ship-select-panel"><span class="ship-label">ESCOLHA SUA NAVE</span><div id="ship-picker" class="ship-picker"></div></div>
       <div class="stage-wrap">
         <canvas id="game" width="480" height="640" aria-label="Game area. Move left and right to dodge obstacles and collect coins and power-ups." role="img"></canvas>
         <div class="overlay" id="overlay">
@@ -34,15 +35,15 @@
           </div>
         </div>
       </div>
-      <div class="ship-select-panel"><span class="ship-label">ESCOLHA SUA NAVE</span><div id="ship-picker" class="ship-picker"></div></div><div class="powerup-bar"><span id="powerup-status">Moeda: +5 · Escudo: bloqueia 1 colisão · L: lentidão por 5s</span><button id="skin-button" type="button">TROCAR NAVE · 50</button></div>
       <div class="mobile-controls" aria-label="Touch controls">
         <button id="left-button" type="button" aria-label="Move left">←</button>
         <button id="right-button" type="button" aria-label="Move right">→</button>
       </div>
+      <div class="powerup-bar"><span id="powerup-status">MOEDA: +5 · ESCUDO (S): bloqueia 1 colisão · L: lentidão por 5s</span></div>
       <footer class="game-footer"><span>MAIS UMA PARTIDA?</span><span>FEITO PARA JOGAR RÁPIDO</span></footer>
     </section>
     <p class="legal">Free to play · No download required</p>
   </main>
-  <script type="module" src="./src/main.js?v=gameplay-fix-3"></script>
+  <script type="module" src="./src/main.js?v=layout-thrust-readme-4"></script>
 </body>
 </html>

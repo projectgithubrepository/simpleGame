@@ -1,32 +1,43 @@
-# Simple Game — Neon Dodge
+# NEON DODGE
 
-A mobile-friendly HTML5 arcade game built with vanilla JavaScript. No install, build step, paid service, or external asset required.
+<p align="center"><img src="assets/neon-dodge-banner.svg" alt="Neon Dodge" width="100%"></p>
+<p align="center"><strong>Arcade espacial para navegador e celular.</strong><br>Desvie dos destroços, colete moedas e sobreviva o máximo possível.</p>
+<p align="center"><a href="https://projectgithubrepository.github.io/simpleGame/?v=layout-thrust-readme-4"><strong>▶ JOGAR AGORA</strong></a></p>
 
-## Play locally
-Open `index.html` in a local static server, or run:
-```bash
-npx serve .
-``
+## Como jogar
+- **Celular:** segure ← ou → nos controles abaixo da tela.
+- **Computador:** use ← / → ou A / D.
+- **Impulso:** os propulsores laterais acendem enquanto você mantém a direção.
+- **Objetivo:** desvie dos obstáculos e colete itens.
 
-## Controls
-- Desktop: **← / →** or **A / D**
-- Mobile: hold the left/right buttons, or touch the left/right side of the playfield
-- Sound: toggle with the music-note button
+## Guia visual dos itens
+<table><tr>
+<td align="center" width="25%"><img src="assets/coin.svg" width="88" alt="Moeda"><br><strong>MOEDA</strong><br>+5 no saldo</td>
+<td align="center" width="25%"><img src="assets/shield.svg" width="88" alt="Escudo"><br><strong>ESCUDO (S)</strong><br>Bloqueia 1 impacto</td>
+<td align="center" width="25%"><img src="assets/slow.svg" width="88" alt="Lentidão"><br><strong>LENTIDÃO (L)</strong><br>Obstáculos 50% mais lentos por 5s</td>
+<td align="center" width="25%"><img src="assets/rock.svg" width="88" alt="Destroço"><br><strong>DESTROÇO</strong><br>Evite a colisão</td>
+</tr></table>
 
-## Tests
-Requires Node.js 22 or newer:
-```bash
-npm test
-``
+## As três naves
+- **Viper:** ciano e magenta.
+- **Phantom:** roxa e dourada.
+- **Titan:** laranja e vermelha.
 
-GitHub Actions runs the automated tests on pushes and pull requests to `main`.
+A escolha fica acima da área de jogo e pode ser alterada antes ou durante a partida.
 
-## Publishing and monetization
-This first build contains no ads and makes no revenue by itself. The repository is private, so public hosting and portal submission are separate next steps. Ad monetization must be added through the SDK and approval process of each distribution platform (for example CrazyGames or GameDistribution). Do not add third-party ad tags to a portal build unless that portal explicitly permits them.
+## Regras rápidas
+- **Moeda dourada ($):** ao tocar, adiciona 5 moedas ao saldo salvo no navegador.
+- **Escudo azul (S):** ao coletar, aparece um anel azul ao redor da nave. A próxima colisão é anulada e consome o escudo. Sem escudo, a colisão encerra a partida.
+- **Lentidão roxa (L):** ao coletar, reduz em 50% a velocidade dos destroços durante 5 segundos.
+- **Propulsor lateral:** efeito visual enquanto você mantém um comando de direção; não é um item coletável.
 
-## Next milestones
-1. Validate gameplay on real mobile devices.
-2. Publish a public demo using a free hosting option.
-3. Add platform-specific SDK integration behind a small adapter.
-4. Submit the game to HTML5 portals.
-5. Add privacy/consent handling and analytics before production monetization.
+## Projeto
+- HTML, CSS e JavaScript puro.
+- Sprites desenhados em canvas e extrudados em camadas (*sprite stacking*).
+- Recorde, moedas e nave escolhida ficam salvos no dispositivo.
+- Testes automatizados: `npm test`.
+- Publicação automática via GitHub Actions e GitHub Pages.
+
+## Links
+- [Jogar Neon Dodge](https://projectgithubrepository.github.io/simpleGame/)
+- [Código-fonte no GitHub](https://github.com/projectgithubrepository/simpleGame)

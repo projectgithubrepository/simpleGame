@@ -181,29 +181,36 @@ function drawSpecialCinematic(){
  const grip=[[leverX-23,leverY+12],[leverX-19,leverY-10],[leverX-9,leverY-20],[leverX+12,leverY-20],[leverX+23,leverY-8],[leverX+20,leverY+15],[leverX+8,leverY+25],[leverX-13,leverY+23]];
  extrude(grip,5,7,18,accent,"#163c5b","#e8ffff");
  ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(leverX-12,leverY-8);ctx.lineTo(leverX+12,leverY-8);ctx.stroke();
- // Pixel-art pilot glove: a sculpted low-resolution sprite, extruded into stacked depth layers.
- // The hand remains human and naturally wrapped around the grip; no robotic fingers or armor.
+ // Human pilot hand: four curled fingers, a broad palm, opposing thumb and fabric cuff.
+ // Low-resolution shapes keep the pixel-art edges crisp while preserving anatomy.
  const gloveCanvas=document.createElement("canvas");gloveCanvas.width=gloveCanvas.height=72;
  const gg=gloveCanvas.getContext("2d");gg.imageSmoothingEnabled=false;
- // Wrist cuff and palm silhouette.
- gg.fillStyle="#101b2c";gg.fillRect(10,39,23,27);gg.fillStyle="#344b68";gg.fillRect(12,38,19,25);
- gg.fillStyle="#7187a4";gg.fillRect(13,39,16,3);gg.fillStyle="#1b2d46";gg.fillRect(14,45,14,15);
- // Palm: rounded stepped silhouette with shaded planes.
- gg.fillStyle="#0b1423";gg.fillRect(12,21,35,27);gg.fillRect(17,17,27,34);
- gg.fillStyle="#243a57";gg.fillRect(14,22,31,25);gg.fillRect(18,18,24,32);
- gg.fillStyle="#526b8b";gg.fillRect(19,19,18,4);gg.fillRect(15,24,5,15);
- gg.fillStyle="#172941";gg.fillRect(38,27,8,15);gg.fillRect(23,45,17,4);
- // Four gloved fingers curl over the forward side of the throttle.
- const finger=(x,y,w,shade)=>{gg.fillStyle="#0a1321";gg.fillRect(x-1,y-1,w+2,14);gg.fillStyle=shade;gg.fillRect(x,y,w,11);gg.fillStyle="#8ba0bb";gg.fillRect(x,y,w,2);gg.fillStyle="#1a2c44";gg.fillRect(x,y+8,w,3);gg.fillStyle="#9aacc2";gg.fillRect(x+1,y+5,w-2,1);};
- finger(18,8,7,"#526b89");finger(27,5,7,"#657d9b");finger(36,8,7,"#536b89");finger(44,14,6,"#3b5372");
- // Thumb crosses the grip in front, with a natural curved stepped shape.
- gg.fillStyle="#0a1321";gg.fillRect(37,31,19,11);gg.fillRect(42,27,13,11);
- gg.fillStyle="#405a7a";gg.fillRect(38,31,16,8);gg.fillRect(43,28,10,8);
- gg.fillStyle="#91a7c1";gg.fillRect(43,28,8,2);gg.fillStyle="#1a2b43";gg.fillRect(39,37,12,2);
- // Fabric seams, knuckle pads and restrained highlights.
- gg.fillStyle="#a9bdd3";gg.fillRect(20,13,4,1);gg.fillRect(29,11,4,1);gg.fillRect(38,14,4,1);
- gg.fillStyle="#101e31";gg.fillRect(21,24,2,12);gg.fillRect(30,23,2,13);gg.fillRect(39,24,2,8);
- gg.fillStyle="#91a8c2";gg.fillRect(17,43,13,1);gg.fillRect(16,47,8,1);
+ const handPoly=(pts,color)=>{gg.fillStyle=color;gg.beginPath();pts.forEach(([x,y],i)=>i?gg.lineTo(x,y):gg.moveTo(x,y));gg.closePath();gg.fill();};
+ // Cuff sits behind the palm and narrows naturally at the wrist.
+ handPoly([[17,43],[37,43],[40,66],[35,70],[19,66]],"#101a2a");
+ handPoly([[19,44],[35,44],[37,64],[33,67],[21,64]],"#536985");
+ gg.fillStyle="#a9bfd7";gg.fillRect(21,46,12,2);gg.fillRect(22,51,10,1);
+ gg.fillStyle="#263b57";gg.fillRect(21,56,13,7);
+ // Palm silhouette and soft fabric planes.
+ handPoly([[12,29],[15,22],[22,18],[37,18],[45,23],[49,31],[47,42],[41,49],[29,52],[19,48],[13,41]],"#0a1423");
+ handPoly([[14,29],[17,23],[23,20],[36,20],[43,24],[47,32],[44,41],[39,46],[29,49],[20,45],[15,39]],"#7188a5");
+ handPoly([[18,25],[24,21],[36,22],[41,26],[35,30],[23,30]],"#c5d6e8");
+ handPoly([[17,30],[23,29],[27,38],[24,44],[18,40]],"#91a8c2");
+ handPoly([[27,31],[40,29],[44,34],[40,42],[30,45],[26,39]],"#435d7c");
+ // Four fingers curve over the grip; each has a knuckle ridge and shaded underside.
+ const digit=(pts,hi,mid,shade)=>{handPoly(pts,"#0a1423");handPoly(pts.map(([x,y])=>[x+1,y+1]),mid);gg.fillStyle=hi;gg.fillRect(pts[0][0]+2,pts[0][1]+2,Math.max(3,pts[1][0]-pts[0][0]-3),2);gg.fillStyle=shade;gg.fillRect(pts[pts.length-2][0]+1,pts[pts.length-2][1]+1,4,2);};
+ digit([[17,23],[20,9],[25,6],[29,9],[27,25],[23,30]],"#dbe8f5","#a8bdd2","#425a77");
+ digit([[25,21],[28,5],[33,3],[37,7],[35,25],[31,29]],"#f1f6fb","#c2d3e4","#526b89");
+ digit([[34,22],[38,7],[43,7],[46,11],[43,28],[39,31]],"#dbe8f5","#a6bad0","#435b78");
+ digit([[42,27],[47,14],[51,15],[53,19],[49,34],[45,36]],"#cbd9e8","#8da4bf","#344d6b");
+ // Thumb crosses the front of the palm and hooks around the throttle.
+ handPoly([[37,34],[43,31],[51,32],[57,37],[57,42],[53,46],[46,44],[40,41]],"#0a1423");
+ handPoly([[39,35],[44,33],[51,34],[55,38],[54,41],[51,43],[45,41],[40,39]],"#7189a6");
+ handPoly([[43,35],[50,35],[53,38],[49,39],[44,38]],"#c5d6e8");
+ // Stitching, knuckle seams and restrained highlights.
+ gg.fillStyle="#edf6ff";gg.fillRect(22,23,3,1);gg.fillRect(31,20,3,1);gg.fillRect(40,23,3,1);
+ gg.fillStyle="#263d59";gg.fillRect(24,33,1,8);gg.fillRect(33,32,1,9);gg.fillRect(41,31,1,6);
+ gg.fillStyle="#9eb3ca";gg.fillRect(19,45,9,1);gg.fillRect(21,48,8,1);
  // Build thickness from many offset copies, then render a crisp nearest-neighbour face.
  const gloveX=handX-17,gloveY=handY-24,gloveScale=1.12;
  ctx.save();ctx.translate(gloveX,gloveY);ctx.rotate(-.12-push*.08);

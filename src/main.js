@@ -58,7 +58,8 @@ function collect(p){if(p.type==="coin"){coins+=5;localStorage.setItem("neon-dodg
 function update(dt){
  elapsed+=dt;
  const k=(keys.has("ArrowRight")||keys.has("d")||keys.has("D")?1:0)-(keys.has("ArrowLeft")||keys.has("a")||keys.has("A")?1:0),dir=k||pointer;
- player.x=clamp(player.x+dir*player.speed*dt,8,W-player.w-8);\n player.thrustDir=dir;player.thrustPulse+=dt*(dir?22:8);
+ player.x=clamp(player.x+dir*player.speed*dt,8,W-player.w-8);
+ player.thrustDir=dir;player.thrustPulse+=dt*(dir?22:8);
  // Tilt follows input briefly and returns to level; it never accumulates into a full spin.
  player.tilt+=(dir*.24-player.tilt)*Math.min(1,dt*11);
  slow=Math.max(0,slow-dt);

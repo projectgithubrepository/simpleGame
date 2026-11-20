@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#090b18">
   <meta name="description" content="Neon Dodge — a fast, free arcade survival game.">
   <title>Neon Dodge — Arcade Survival</title>
-  <link rel="stylesheet" href="./styles.css?v=mecha-cockpit-8">
+  <link rel="stylesheet" href="./styles.css?v=mecha-dom-9">
 </head>
 <body>
   <main class="shell">
@@ -24,6 +24,13 @@
       <div class="ship-select-panel"><span class="ship-label">ESCOLHA SUA NAVE</span><div id="ship-picker" class="ship-picker"></div></div>
       <div class="stage-wrap">
         <canvas id="game" width="480" height="640" aria-label="Game area. Move left and right to dodge obstacles and collect coins and power-ups." role="img"></canvas>
+        <div class="special-scene" id="special-scene" aria-hidden="true">
+          <div class="scene-stars"></div><div class="scene-planet"></div>
+          <div class="scene-title"><strong>OVERDRIVE</strong><span>NEURAL LINK // PILOT SYSTEM ONLINE</span></div>
+          <div class="cockpit-frame"><div class="cockpit-glass"></div><div class="cockpit-rail left"></div><div class="cockpit-rail right"></div><div class="cockpit-dashboard"><i></i><i></i><i></i></div></div>
+          <div class="throttle"><div class="throttle-stick"></div><div class="pilot-glove"><b></b><b></b><b></b><b></b><i></i></div></div>
+          <div class="scene-readout">SYSTEM OVERRIDE · 03 SEC</div><div class="scene-progress"></div>
+        </div>
         <div class="overlay" id="overlay">
           <div class="overlay-card">
             <p class="eyebrow" id="overlay-eyebrow">ARCADE SURVIVAL</p>
@@ -53,6 +60,6 @@
     </section>
     <p class="legal">Free to play · No download required</p>
   </main>
-  <script type="module" src="./src/main.js?v=mecha-cockpit-8"></script>
+  <script type="module" src="./src/main.js?v=mecha-dom-9"></script>
 </body>
 </html>

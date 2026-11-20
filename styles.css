@@ -12,3 +12,17 @@
 .powerup-bar{padding:10px 3px 2px}
 .powerup-bar span{display:block;width:100%;font-size:10px;line-height:1.5}
 @media(max-width:380px){.ship-select-panel{gap:6px}.ship-select-panel .ship-label{width:100%}.ship-select-panel .ship-picker{width:100%}.ship-picker button{min-height:36px}}
+
+.ship-picker.locked button{opacity:.55;cursor:not-allowed;filter:saturate(.55)}
+.ship-picker button:disabled{pointer-events:none}
+.visual-guide{margin:10px 0 4px;padding:12px;border:1px solid #293052;border-radius:12px;background:#0b1022}
+.guide-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:10px;letter-spacing:.16em;color:#dce5ff}
+.guide-heading a{color:var(--cyan);font-size:9px;letter-spacing:0;text-decoration:none}
+.guide-items{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.guide-items>div{display:flex;min-width:0;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.guide-items img{width:42px;height:42px;object-fit:contain}
+.guide-items strong{font-size:8px;letter-spacing:.08em}
+.guide-items span{font-size:8px;line-height:1.3;color:#9ba6c7}
+.ship-select-panel{margin-bottom:10px}
+.ship-picker button:disabled{opacity:.5}
+@media(max-width:380px){.guide-items{gap:3px}.guide-items img{width:34px;height:34px}.guide-items span{font-size:7px}}

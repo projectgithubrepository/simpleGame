@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#090b18">
   <meta name="description" content="Neon Dodge — a fast, free arcade survival game.">
   <title>Neon Dodge — Arcade Survival</title>
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=coins-ships-2">
 </head>
 <body>
   <main class="shell">
@@ -28,13 +28,13 @@
             <p class="eyebrow" id="overlay-eyebrow">ARCADE SURVIVAL</p>
             <h1 id="overlay-title">NEON<br><span>DODGE</span></h1>
             <p id="overlay-copy">Desvie dos destroços, colete moedas e use os itens especiais para sobreviver.</p>
-            <p class="ship-label">ESCOLHA SUA NAVE</p><div id="ship-picker" class="ship-picker"></div>
+            
             <button id="play-button" class="primary-button" type="button">PLAY NOW <span>→</span></button>
             <p class="hint">← → ou A / D · Controles de toque abaixo</p>
           </div>
         </div>
       </div>
-      <div class="powerup-bar"><span id="powerup-status">Moeda: +5 · Escudo: bloqueia 1 colisão · L: lentidão por 5s</span><button id="skin-button" type="button">TROCAR NAVE · 50</button></div>
+      <div class="ship-select-panel"><span class="ship-label">ESCOLHA SUA NAVE</span><div id="ship-picker" class="ship-picker"></div></div><div class="powerup-bar"><span id="powerup-status">Moeda: +5 · Escudo: bloqueia 1 colisão · L: lentidão por 5s</span><button id="skin-button" type="button">TROCAR NAVE · 50</button></div>
       <div class="mobile-controls" aria-label="Touch controls">
         <button id="left-button" type="button" aria-label="Move left">←</button>
         <button id="right-button" type="button" aria-label="Move right">→</button>
@@ -43,6 +43,6 @@
     </section>
     <p class="legal">Free to play · No download required</p>
   </main>
-  <script type="module" src="./src/main.js"></script>
+  <script type="module" src="./src/main.js?v=coins-ships-2"></script>
 </body>
 </html>

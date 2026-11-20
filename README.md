@@ -23,7 +23,7 @@
 - **Phantom:** roxa e dourada.
 - **Titan:** laranja e vermelha.
 
-A escolha fica acima da área de jogo e pode ser alterada antes ou durante a partida.
+A escolha da nave fica disponível somente antes de iniciar. Depois que a partida começa, os botões ficam bloqueados; ao terminar, você pode escolher outra nave para a próxima rodada.
 
 ## Regras rápidas
 - **Moeda dourada ($):** ao tocar, adiciona 5 moedas ao saldo salvo no navegador.

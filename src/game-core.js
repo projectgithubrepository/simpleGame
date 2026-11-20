@@ -14,3 +14,15 @@ export function nextSpawnInterval(score) {
 export function calculateScore(seconds) {
   return Math.max(0, Math.floor(seconds * 10));
 }
+
+export function coinValue() {
+  return 5;
+}
+
+export function powerupDuration() {
+  return 5;
+}
+
+export function canUnlockSkin(coins, price = 50) {
+  return coins >= price;
+}

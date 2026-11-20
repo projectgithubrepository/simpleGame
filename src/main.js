@@ -1,177 +1,39 @@
-import { clamp, intersects, nextSpawnInterval, calculateScore } from "./game-core.js";
-
-const canvas = document.querySelector("#game");
-const ctx = canvas.getContext("2d");
-const scoreEl = document.querySelector("#score");
-const bestEl = document.querySelector("#best-score");
-const statusEl = document.querySelector("#status");
-const overlay = document.querySelector("#overlay");
-const titleEl = document.querySelector("#overlay-title");
-const copyEl = document.querySelector("#overlay-copy");
-const eyebrowEl = document.querySelector("#overlay-eyebrow");
-const playButton = document.querySelector("#play-button");
-const soundButton = document.querySelector("#sound-button");
-
-const W = canvas.width, H = canvas.height;
-const player = { x: W / 2 - 17, y: H - 82, width: 34, height: 34, speed: 330, spin: 0, yaw: 0 };
-
-// A real sprite-stack: the same pixel-art slice is layered along the depth axis.
-// Yaw offsets the individual slices; roll rotates the complete stack in flight.
-function createShipSlice() {
-  const sprite = document.createElement("canvas");
-  sprite.width = 64; sprite.height = 64;
-  const s = sprite.getContext("2d");
-  s.imageSmoothingEnabled = false;
-  s.fillStyle = "#123c55";
-  s.beginPath(); s.moveTo(32, 3); s.lineTo(39, 20); s.lineTo(59, 39);
-  s.lineTo(47, 43); s.lineTo(42, 56); s.lineTo(32, 49);
-  s.lineTo(22, 56); s.lineTo(17, 43); s.lineTo(5, 39);
-  s.lineTo(25, 20); s.closePath(); s.fill();
-  s.fillStyle = "#50f6ed";
-  s.beginPath(); s.moveTo(32, 5); s.lineTo(37, 24); s.lineTo(32, 43);
-  s.lineTo(27, 24); s.closePath(); s.fill();
-  s.fillStyle = "#d9fffd";
-  s.fillRect(30, 13, 4, 17);
-  s.fillStyle = "#ff4e9b";
-  s.fillRect(9, 38, 8, 4); s.fillRect(47, 38, 8, 4);
-  s.fillStyle = "#ffb45c";
-  s.fillRect(25, 48, 5, 9); s.fillRect(34, 48, 5, 9);
-  s.fillStyle = "#a4ffff";
-  s.fillRect(28, 28, 3, 5); s.fillRect(33, 28, 3, 5);
-  return sprite;
-}
-const shipSlice = createShipSlice();
-let obstacles = [], particles = [], running = false, elapsed = 0, spawnTimer = 0;
-let lastTime = 0, pointerDirection = 0, soundOn = false, audioContext = null;
-let best = Number(localStorage.getItem("neon-dodge-best") || 0);
-bestEl.textContent = best;
-
-const keys = new Set();
-function beep(frequency = 440, duration = .06) {
-  if (!soundOn) return;
-  try {
-    audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioContext.createOscillator(), gain = audioContext.createGain();
-    osc.frequency.value = frequency; osc.type = "sine";
-    gain.gain.setValueAtTime(.045, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(.001, audioContext.currentTime + duration);
-    osc.connect(gain); gain.connect(audioContext.destination);
-    osc.start(); osc.stop(audioContext.currentTime + duration);
-  } catch {}
-}
-
-function reset() {
-  obstacles = []; particles = []; elapsed = 0; spawnTimer = 0;
-  player.x = W / 2 - player.width / 2;
-  scoreEl.textContent = "0";
-}
-function start() {
-  reset(); running = true; lastTime = performance.now();
-  overlay.classList.add("hidden"); statusEl.textContent = "GO!";
-  requestAnimationFrame(loop); beep(620, .1);
-}
-function endGame() {
-  running = false;
-  const score = calculateScore(elapsed);
-  if (score > best) { best = score; localStorage.setItem("neon-dodge-best", String(best)); bestEl.textContent = best; }
-  statusEl.textContent = "GAME OVER";
-  eyebrowEl.textContent = "RUN COMPLETE";
-  titleEl.innerHTML = "GAME<br><span>OVER</span>";
-  copyEl.textContent = `You scored ${score}. Best score: ${best}. Ready for another run?`;
-  playButton.innerHTML = "PLAY AGAIN <span>→</span>";
-  overlay.classList.remove("hidden"); beep(150, .25);
-}
-
-function spawnObstacle() {
-  const width = 24 + Math.random() * 42;
-  obstacles.push({ x: Math.random() * (W - width), y: -30, width, height: 18 + Math.random() * 22, speed: 190 + Math.min(210, elapsed * 5) + Math.random() * 55, hue: Math.random() > .5 ? 174 : 328 });
-}
-function burst(x, y) {
-  for (let i = 0; i < 18; i++) particles.push({ x, y, vx: (Math.random() - .5) * 260, vy: (Math.random() - .5) * 260, life: .5 });
-}
-function update(dt) {
-  elapsed += dt;
-  player.spin += dt * 1.35;
-  player.yaw += dt * 1.05;
-  const direction = (keys.has("ArrowRight") || keys.has("d") || keys.has("D") ? 1 : 0) -
-    (keys.has("ArrowLeft") || keys.has("a") || keys.has("A") ? 1 : 0) || pointerDirection;
-  player.x = clamp(player.x + direction * player.speed * dt, 8, W - player.width - 8);
-  spawnTimer += dt * 1000;
-  if (spawnTimer >= nextSpawnInterval(calculateScore(elapsed))) { spawnTimer = 0; spawnObstacle(); }
-  for (const obstacle of obstacles) obstacle.y += obstacle.speed * dt;
-  obstacles = obstacles.filter(o => o.y < H + 40);
-  for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; }
-  particles = particles.filter(p => p.life > 0);
-  const box = { x: player.x + 5, y: player.y + 5, width: player.width - 10, height: player.height - 10 };
-  for (const obstacle of obstacles) {
-    if (intersects(box, obstacle)) { burst(player.x + 17, player.y + 17); endGame(); return; }
-  }
-  scoreEl.textContent = calculateScore(elapsed);
-}
-function drawStackedShip() {
-  const cx = player.x + player.width / 2;
-  const cy = player.y + player.height / 2;
-  const layers = 18;
-  ctx.save();
-  ctx.translate(cx, cy);
-  // Full 360-degree flight roll; no scaling or warping of the sprite.
-  ctx.rotate(player.spin);
-  for (let i = layers - 1; i >= 0; i--) {
-    const depth = i - (layers - 1) / 2;
-    const sideShift = Math.sin(player.yaw) * depth * 0.72;
-    const shade = 0.42 + (i / layers) * 0.58;
-    ctx.globalAlpha = 0.96;
-    ctx.filter = `brightness(${shade})`;
-    ctx.drawImage(shipSlice, -32 + sideShift, -32 + depth * 0.72, 64, 64);
-  }
-  ctx.filter = "none";
-  ctx.globalAlpha = 1;
-  ctx.restore();
-}
-
-function draw() {
-  ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = "#080c1d"; ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = "#17213e"; ctx.lineWidth = 1;
-  for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
-  for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
-  for (const o of obstacles) {
-    ctx.shadowBlur = 16; ctx.shadowColor = `hsl(${o.hue} 100% 60%)`;
-    ctx.fillStyle = `hsl(${o.hue} 100% 62%)`; ctx.fillRect(o.x, o.y, o.width, o.height);
-  }
-  drawStackedShip();
-  ctx.shadowBlur = 0;
-  for (const p of particles) { ctx.globalAlpha = Math.max(0, p.life * 2); ctx.fillStyle = "#ff4e9b"; ctx.fillRect(p.x, p.y, 4, 4); }
-  ctx.globalAlpha = 1;
-}
-function loop(now) {
-  if (!running) return;
-  const dt = Math.min((now - lastTime) / 1000, .035); lastTime = now;
-  update(dt); draw();
-  if (running) requestAnimationFrame(loop);
-}
-function bindHold(button, direction) {
-  const down = event => { event.preventDefault(); pointerDirection = direction; };
-  const up = () => { if (pointerDirection === direction) pointerDirection = 0; };
-  button.addEventListener("pointerdown", down);
-  button.addEventListener("pointerup", up);
-  button.addEventListener("pointercancel", up);
-  button.addEventListener("pointerleave", up);
-}
-bindHold(document.querySelector("#left-button"), -1);
-bindHold(document.querySelector("#right-button"), 1);
-window.addEventListener("keydown", e => { if (["ArrowLeft", "ArrowRight", " "].includes(e.key)) e.preventDefault(); keys.add(e.key); });
-window.addEventListener("keyup", e => keys.delete(e.key));
-window.addEventListener("blur", () => { keys.clear(); pointerDirection = 0; });
-playButton.addEventListener("click", start);
-soundButton.addEventListener("click", () => { soundOn = !soundOn; soundButton.textContent = soundOn ? "♫" : "♪"; soundButton.setAttribute("aria-label", soundOn ? "Mute sound" : "Enable sound"); beep(520); });
-canvas.addEventListener("pointerdown", e => {
-  if (!running) return;
-  const rect = canvas.getBoundingClientRect();
-  const x = (e.clientX - rect.left) / rect.width * W;
-  pointerDirection = x < player.x + player.width / 2 ? -1 : 1;
-});
-canvas.addEventListener("pointerup", () => pointerDirection = 0);
-canvas.addEventListener("pointercancel", () => pointerDirection = 0);
-
-draw();
+import {clamp,intersects,nextSpawnInterval,calculateScore} from "./game-core.js";
+const $=s=>document.querySelector(s),canvas=$("#game"),ctx=canvas.getContext("2d"),W=canvas.width,H=canvas.height;
+const scoreEl=$("#score"),bestEl=$("#best-score"),coinsEl=$("#coins"),statusEl=$("#status"),overlay=$("#overlay"),titleEl=$("#overlay-title"),copyEl=$("#overlay-copy"),eyebrowEl=$("#overlay-eyebrow"),playButton=$("#play-button"),soundButton=$("#sound-button"),shipPicker=$("#ship-picker"),powerupStatus=$("#powerup-status"),skinButton=$("#skin-button");
+const names=["Viper","Phantom","Titan"],palettes=[["#50f6ed","#168aab","#ff4e9b"],["#b8a0ff","#6047c7","#f5d66e"],["#ffb45c","#b84b37","#f7f1dc"]];
+let ship=+(localStorage.getItem("neon-dodge-ship")||0),coins=+(localStorage.getItem("neon-dodge-coins")||0),best=+(localStorage.getItem("neon-dodge-best")||0);
+const player={x:W/2-18,y:H-92,w:36,h:42,speed:330,tilt:0,shield:false};
+let obstacles=[],pickups=[],particles=[],running=false,elapsed=0,spawn=0,pickupSpawn=1.5,slow=0,last=0,pointer=0,sound=false,audio=null;
+const keys=new Set();bestEl.textContent=best;coinsEl.textContent=coins;
+function sprite(type,index=0){const c=document.createElement("canvas");c.width=c.height=64;const g=c.getContext("2d");g.imageSmoothingEnabled=false;
+ if(type==="ship"){const [a,d,b]=palettes[index];g.fillStyle=d;g.beginPath();if(index===0){g.moveTo(32,3);g.lineTo(42,22);g.lineTo(61,42);g.lineTo(46,46);g.lineTo(40,59);g.lineTo(32,51);g.lineTo(24,59);g.lineTo(18,46);g.lineTo(3,42);g.lineTo(22,22);}else if(index===1){g.moveTo(32,4);g.lineTo(47,18);g.lineTo(59,35);g.lineTo(48,55);g.lineTo(32,47);g.lineTo(16,55);g.lineTo(5,35);g.lineTo(17,18);}else{g.moveTo(32,2);g.lineTo(44,20);g.lineTo(62,30);g.lineTo(52,49);g.lineTo(42,47);g.lineTo(39,61);g.lineTo(25,61);g.lineTo(22,47);g.lineTo(12,49);g.lineTo(2,30);g.lineTo(20,20);}g.closePath();g.fill();g.fillStyle=a;g.beginPath();g.moveTo(32,7);g.lineTo(39,29);g.lineTo(32,49);g.lineTo(25,29);g.fill();g.fillStyle="#f4ffff";g.fillRect(29,14,6,15);g.fillStyle=b;g.fillRect(8,38,10,5);g.fillRect(46,38,10,5);g.fillStyle="#ffb45c";g.fillRect(26,49,5,11);g.fillRect(34,49,5,11);g.fillStyle="#fff";g.fillRect(28,30,3,5);g.fillRect(34,30,3,5);}
+ else if(type==="rock"){g.fillStyle="#37415e";g.beginPath();g.moveTo(12,8);g.lineTo(45,4);g.lineTo(60,24);g.lineTo(52,51);g.lineTo(29,61);g.lineTo(5,44);g.lineTo(3,22);g.fill();g.fillStyle="#8996b8";g.fillRect(17,13,23,9);g.fillRect(10,28,17,16);g.fillStyle="#202943";g.fillRect(34,32,18,15);}
+ else{g.fillStyle="#ff4e9b";g.beginPath();g.arc(32,32,23,0,7);g.fill();g.fillStyle="#67254f";g.fillRect(27,4,10,56);g.fillRect(4,27,56,10);g.fillStyle="#ffe3f0";g.fillRect(27,17,10,10);}
+ return c;}
+const ships=names.map((_,i)=>sprite("ship",i)),rock=sprite("rock"),mine=sprite("mine");
+function picker(){shipPicker.innerHTML=names.map((n,i)=>'<button type="button" data-ship="'+i+'" class="'+(ship===i?"selected":"")+'">'+n+'</button>').join("");shipPicker.querySelectorAll("button").forEach(b=>b.onclick=()=>{if(running)return;ship=+b.dataset.ship;localStorage.setItem("neon-dodge-ship",ship);picker();draw();});}picker();
+function beep(f=440,d=.07){if(!sound)return;try{audio||=new(window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=f;g.gain.setValueAtTime(.04,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+d);}catch{}}
+function reset(){obstacles=[];pickups=[];particles=[];elapsed=0;spawn=0;pickupSpawn=1;slow=0;player.x=W/2-player.w/2;player.tilt=0;player.shield=false;powerupStatus.textContent="Moeda = +5. Escudo = bloqueia 1 batida. L = lentidão por 5s.";}
+function start(){reset();running=true;last=performance.now();overlay.classList.add("hidden");statusEl.textContent="JOGANDO";requestAnimationFrame(loop);beep(620);}
+function finish(){running=false;const s=calculateScore(elapsed);if(s>best){best=s;localStorage.setItem("neon-dodge-best",best);bestEl.textContent=best;}statusEl.textContent="FIM";eyebrowEl.textContent="FIM DE JOGO";titleEl.innerHTML="GAME<br><span>OVER</span>";copyEl.textContent="Pontos: "+s+". Recorde: "+best+". Moedas: "+coins+".";playButton.innerHTML="JOGAR NOVAMENTE <span>→</span>";overlay.classList.remove("hidden");}
+function spawnObstacle(){let z=28+Math.random()*24;obstacles.push({x:Math.random()*(W-z),y:-40,w:z,h:z,v:190+Math.min(190,elapsed*4)+Math.random()*45,type:Math.random()<.35?"mine":"rock",angle:Math.random()*6,spin:Math.random()<.4?(Math.random()-.5)*3:0});}
+function spawnPickup(){const r=Math.random();pickups.push({x:20+Math.random()*(W-40),y:-20,r:r<.68?9:12,v:150,type:r<.68?"coin":r<.84?"shield":"slow",phase:0});}
+function burst(x,y){for(let i=0;i<18;i++)particles.push({x,y,vx:(Math.random()-.5)*250,vy:(Math.random()-.5)*250,life:.5});}
+function collect(p){if(p.type==="coin"){coins+=5;localStorage.setItem("neon-dodge-coins",coins);coinsEl.textContent=coins;powerupStatus.textContent="+5 moedas. Saldo salvo.";}if(p.type==="shield"){player.shield=true;powerupStatus.textContent="ESCUDO ATIVO: a próxima colisão será anulada.";}if(p.type==="slow"){slow=5;powerupStatus.textContent="LENTIDÃO ATIVA: obstáculos 48% mais lentos por 5 segundos.";}beep(800);}
+function update(dt){elapsed+=dt;const k=(keys.has("ArrowRight")||keys.has("d")||keys.has("D")?1:0)-(keys.has("ArrowLeft")||keys.has("a")||keys.has("A")?1:0),dir=k||pointer;player.x=clamp(player.x+dir*player.speed*dt,8,W-player.w-8);player.tilt+=(dir*.32-player.tilt)*Math.min(1,dt*9);slow=Math.max(0,slow-dt);
+ spawn+=dt*1000;if(spawn>=nextSpawnInterval(calculateScore(elapsed))){spawn=0;spawnObstacle();}pickupSpawn-=dt;if(pickupSpawn<=0){spawnPickup();pickupSpawn=3+Math.random()*2.5;}
+ obstacles.forEach(o=>{o.y+=o.v*dt*(slow?0.52:1);o.angle+=o.spin*dt;});obstacles=obstacles.filter(o=>o.y<H+50);pickups.forEach(p=>{p.y+=p.v*dt;p.phase+=dt*3;});pickups=pickups.filter(p=>p.y<H+30);particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;});particles=particles.filter(p=>p.life>0);
+ const hit={x:player.x+7,y:player.y+8,width:player.w-14,height:player.h-16};for(let i=obstacles.length-1;i>=0;i--){const o=obstacles[i];if(intersects(hit,{x:o.x+4,y:o.y+4,width:o.w-8,height:o.h-8})){if(player.shield){player.shield=false;obstacles.splice(i,1);burst(player.x+18,player.y+20);powerupStatus.textContent="ESCUDO CONSUMIDO: colisão bloqueada!";}else{burst(player.x+18,player.y+20);finish();return;}}}
+ for(let i=pickups.length-1;i>=0;i--){const p=pickups[i];if(Math.hypot(p.x-player.x-18,p.y-player.y-21)<p.r+17){collect(p);pickups.splice(i,1);}}scoreEl.textContent=calculateScore(elapsed);}
+function stack(img,x,y,size,angle=0,layers=10){ctx.save();ctx.translate(x,y);ctx.rotate(angle);for(let i=layers-1;i>=0;i--){let z=i-(layers-1)/2;ctx.globalAlpha=.5+i/layers*.45;ctx.filter="brightness("+(0.55+i/layers*.5)+")";ctx.drawImage(img,-size/2+z*.5,-size/2+z*.7,size,size);}ctx.filter="none";ctx.globalAlpha=1;ctx.restore();}
+function drawShip(){ctx.save();ctx.translate(player.x+18,player.y+21);ctx.rotate(player.tilt);if(player.shield){ctx.strokeStyle="#50f6ed";ctx.lineWidth=3;ctx.shadowBlur=15;ctx.shadowColor="#50f6ed";ctx.beginPath();ctx.arc(0,0,30,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;}stack(ships[ship],0,0,56,0,16);ctx.restore();}
+function draw(){ctx.clearRect(0,0,W,H);ctx.fillStyle="#080c1d";ctx.fillRect(0,0,W,H);ctx.strokeStyle="#17213e";for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+ obstacles.forEach(o=>{ctx.shadowBlur=12;ctx.shadowColor=o.type==="mine"?"#ff4e9b":"#9ba8cc";stack(o.type==="mine"?mine:rock,o.x+o.w/2,o.y+o.h/2,o.w,o.spin?o.angle:0,9);});ctx.shadowBlur=0;
+ pickups.forEach(p=>{ctx.save();ctx.translate(p.x,p.y);if(p.type==="coin"){ctx.rotate(Math.sin(p.phase)*.2);ctx.shadowBlur=12;ctx.shadowColor="#ffd45a";ctx.fillStyle="#ffd45a";ctx.beginPath();ctx.arc(0,0,p.r,0,7);ctx.fill();ctx.fillStyle="#81500c";ctx.font="bold 12px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("+",0,1);}else{ctx.strokeStyle=p.type==="shield"?"#50f6ed":"#a9a0ff";ctx.lineWidth=3;ctx.shadowBlur=12;ctx.shadowColor=ctx.strokeStyle;ctx.beginPath();ctx.arc(0,0,p.r,0,7);ctx.stroke();ctx.fillStyle="#fff";ctx.font="bold 9px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(p.type==="shield"?"S":"L",0,1);}ctx.restore();});drawShip();particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life*2);ctx.fillStyle="#ff4e9b";ctx.fillRect(p.x,p.y,4,4);});ctx.globalAlpha=1;}
+function loop(t){if(!running)return;const dt=Math.min((t-last)/1000,.035);last=t;update(dt);draw();if(running)requestAnimationFrame(loop);}
+function hold(el,d){const down=e=>{e.preventDefault();pointer=d;},up=()=>{if(pointer===d)pointer=0;};el.addEventListener("pointerdown",down);el.addEventListener("pointerup",up);el.addEventListener("pointercancel",up);el.addEventListener("pointerleave",up);}hold($("#left-button"),-1);hold($("#right-button"),1);
+window.addEventListener("keydown",e=>{if(["ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();keys.add(e.key);});window.addEventListener("keyup",e=>keys.delete(e.key));window.addEventListener("blur",()=>{keys.clear();pointer=0;});
+playButton.addEventListener("click",start);soundButton.addEventListener("click",()=>{sound=!sound;soundButton.textContent=sound?"♫":"♪";beep(500);});
+skinButton.addEventListener("click",()=>{if(coins<50){powerupStatus.textContent="Você precisa de 50 moedas para trocar a nave.";return;}coins-=50;localStorage.setItem("neon-dodge-coins",coins);coinsEl.textContent=coins;ship=(ship+1)%3;localStorage.setItem("neon-dodge-ship",ship);picker();powerupStatus.textContent="Nave alterada.";});
+canvas.addEventListener("pointerdown",e=>{if(!running)return;const r=canvas.getBoundingClientRect();pointer=(e.clientX-r.left)/r.width*W<player.x+18?-1:1;});canvas.addEventListener("pointerup",()=>pointer=0);canvas.addEventListener("pointercancel",()=>pointer=0);draw();

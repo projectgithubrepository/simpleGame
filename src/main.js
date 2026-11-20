@@ -122,94 +122,119 @@ function drawThruster(){if(!player.thrustDir)return;const movingRight=player.thr
 function drawShip(){ctx.save();ctx.translate(player.x+18,player.y+21);ctx.rotate(player.tilt);if(ship===1&&specialTimer>0){ctx.globalAlpha=.48;ctx.strokeStyle="#c5a6ff";ctx.lineWidth=3;ctx.shadowBlur=20;ctx.shadowColor="#c5a6ff";ctx.beginPath();ctx.arc(0,0,29,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}if(player.shield){ctx.strokeStyle="#50f6ed";ctx.lineWidth=3;ctx.shadowBlur=18;ctx.shadowColor="#50f6ed";ctx.beginPath();ctx.arc(0,0,33,0,Math.PI*2);ctx.stroke();ctx.fillStyle="#50f6ed22";ctx.fill();ctx.shadowBlur=0;}drawStack(ships[ship],0,0,57);ctx.restore();drawThruster();}
 function drawSpecialCinematic(){
  if(specialCinematic<=0)return;
- const t=3-specialCinematic,p=Math.min(1,t/3),fade=Math.min(1,t/.12,specialCinematic/.2);
+ const t=3-specialCinematic,fade=Math.min(1,t/.16,specialCinematic/.22);
  const accent=palettes[ship][0],mid=palettes[ship][1];
- // Rebuilt as a dedicated low-resolution pixel-art shot. The previous vector cockpit
- // and tiny glove are deliberately gone: this is a close, physical pilot POV.
- const rw=240,rh=424,frame=document.createElement("canvas");frame.width=rw;frame.height=rh;
+ const rw=320,rh=560,frame=document.createElement("canvas");frame.width=rw;frame.height=rh;
  const g=frame.getContext("2d");g.imageSmoothingEnabled=false;
  const clamp01=v=>Math.max(0,Math.min(1,v));
  const ease=v=>{v=clamp01(v);return v*v*(3-2*v);};
- const enter=ease((t-.28)/.72),grab=ease((t-1.02)/.55),ignite=ease((t-1.72)/.65);
- const shake=ignite*(Math.sin(t*52)*2+Math.sin(t*31)*1.2);
- const poly=(pts,color)=>{g.fillStyle=color;g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fill();};
- const stack=(pts,depth,face,side)=>{for(let z=depth;z>0;z--)poly(pts.map(([x,y])=>[x+z*.48,y+z*.65]),side);poly(pts,face);};
+ const approach=ease((t-.22)/.8),grab=ease((t-1.0)/.55),power=ease((t-1.72)/.7);
+ const shake=power*(Math.sin(t*54)*2.2+Math.sin(t*31)*1.1);
  const rect=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));};
- g.save();g.translate(shake,0);g.globalAlpha=fade;
- // Deep hangar-black cockpit with a real layered windshield, not a flat neon frame.
- const bg=g.createLinearGradient(0,0,0,rh);bg.addColorStop(0,"#07101d");bg.addColorStop(.55,"#101c2c");bg.addColorStop(1,"#030711");g.fillStyle=bg;g.fillRect(0,0,rw,rh);
- for(let i=0;i<170;i++){const x=(i*73)%rw,y=(i*137)%rh;rect(x,y,1+(i%3===0),1,i%5===0?"#718da8":"#263b55");}
- stack([[0,34],[35,12],[205,12],[240,34],[224,260],[16,260]],12,"#263c56","#0a1422");
- stack([[13,43],[43,27],[197,27],[227,43],[212,232],[28,232]],8,"#60758c","#17283d");
- // Windshield glass has reflected planet light and layered atmospheric bands.
- poly([[28,52],[57,38],[183,38],[212,52],[201,197],[39,197]],"#081c31");
- const sky=g.createLinearGradient(0,42,0,198);sky.addColorStop(0,"#173b59");sky.addColorStop(.58,"#10243d");sky.addColorStop(1,"#241d3a");g.fillStyle=sky;g.fillRect(43,48,154,145);
- for(let i=0;i<44;i++){const x=(i*47)%154+43,y=(i*83)%145+48;rect(x,y,1+(i%3),1,i%4===0?"#d8efff":"#8ca9c3");}
- // A huge distant world, rendered in hard pixel clusters with a bright atmospheric rim.
- const px=122+Math.sin(t*.5)*2,py=111,pr=36;
- g.fillStyle="#9bd9ed";g.beginPath();g.arc(px,py,pr+2,0,Math.PI*2);g.fill();
- g.fillStyle="#385c83";g.beginPath();g.arc(px,py,pr,0,Math.PI*2);g.fill();
- g.save();g.beginPath();g.arc(px,py,pr,0,Math.PI*2);g.clip();
- for(let i=0;i<95;i++){const x=px-34+(i*19)%68,y=py-33+(i*29)%66;rect(x,y,3+(i%8),2+(i%4),i%3===0?"#b5d2d7":i%3===1?"#547a9b":"#243f62");}
- rect(px-30,py-14,65,4,"#203d61");rect(px-35,py+12,73,5,"#1d3558");
- g.restore();
- g.strokeStyle="#b5ecff";g.lineWidth=1;g.beginPath();g.ellipse(px,py,58,13,-.16,0,Math.PI*2);g.stroke();
- // Strong perspective rails, bolts and warning lights give the cockpit physical scale.
- for(let side of [0,1]){const x=side?220:20;poly(side?[[x,42],[x+8,49],[x-5,210],[x-15,222]]:[[x,42],[x+15,49],[x+5,210],[x-5,222]],"#a7b9c9");rect(side?216:17,70,4,116,accent);for(let j=0;j<5;j++){rect(side?210:25,72+j*27,5,4,j%2? "#8aa2b9":"#effaff");}}
- // Lower console: stacked armor plates, inset displays, tactile switches and labels.
- stack([[0,250],[38,220],[202,220],[240,250],[240,424],[0,424]],18,"#34465d","#0a1220");
- stack([[13,267],[55,239],[185,239],[227,267],[217,398],[23,398]],10,"#172a40","#080f1b");
- // Recessed instrument wells with tiny pixel telemetry.
- for(let side=0;side<2;side++){const x=side?164:25;stack([[x,266],[x+50,266],[x+46,315],[x+4,315]],4,"#080f1b","#02060c");rect(x+5,273,39,2,accent);for(let k=0;k<6;k++){rect(x+6+k*6,286+(k%2)*5,3,13-(k%3)*3,k%2?"#6b8da8":"#d0f5ff");}rect(x+7,307,28,2,"#526d86");}
- rect(95,259,50,28,"#071321");rect(99,263,42,20,"#102d43");rect(102,266,36,2,accent);rect(102,272,22,2,"#d8efff");rect(102,278,30,2,"#7197b7");
- // Lever socket and rails in the foreground.
- stack([[80,330],[160,330],[177,424],[63,424]],12,"#52677f","#101c2d");
- stack([[101,300],[139,300],[146,375],[94,375]],12,"#1c3048","#070e18");
- for(let k=0;k<5;k++){rect(101+k*7,310,3,49,k%2?"#506a86":"#263d58");}
- const leverY=365-grab*36;
- stack([[108,leverY],[132,leverY],[137,leverY+43],[103,leverY+43]],8,"#93a9bd","#263b55");
- stack([[99,leverY-12],[141,leverY-12],[146,leverY+9],[94,leverY+9]],8,accent,"#12374d");
- rect(103,leverY-8,34,3,"#e9ffff");rect(106,leverY+3,27,2,"#16435d");
- // Pilot's arm enters from frame-right. Hand is a normal padded flight glove,
- // with a clear wrist, palm, four curled fingers and opposing thumb — never robotic.
- const hx=174-enter*48,hy=leverY-18+enter*4;
- g.save();g.translate(hx,hy);g.rotate(-.12-grab*.12);
- // Sleeve and cuff, each with stacked thickness and fabric seams.
- stack([[-8,25],[17,18],[39,43],[30,77],[2,70],[-13,47]],9,"#263b55","#091421");
- poly([[-4,27],[16,21],[31,39],[23,64],[3,61],[-8,43]],"#667f98");
- rect(1,31,21,3,"#a9bfd0");rect(4,37,17,2,"#314d69");
- stack([[1,14],[27,8],[39,23],[30,43],[7,42],[-3,28]],7,"#25384f","#08111d");
- // Palm silhouette with broad heel and anatomically connected finger base.
- poly([[4,17],[8,8],[18,3],[34,6],[43,16],[42,30],[34,40],[18,44],[7,37],[1,27]],"#0a1421");
- poly([[7,17],[11,10],[19,7],[32,9],[39,17],[38,29],[32,36],[18,40],[9,34],[5,26]],"#8298ad");
- poly([[10,15],[17,9],[29,11],[35,17],[27,20],[15,20]],"#c5d4df");
- poly([[8,22],[17,20],[20,32],[14,36],[8,31]],"#a3b5c7");
- poly([[21,23],[36,20],[37,29],[30,36],[20,34]],"#526c86");
- // Four padded fingers fold over the grip; segmented shading reads as fabric, not metal.
- const finger=(pts,base,hi,shadow)=>{poly(pts,"#08111d");poly(pts.map(([x,y])=>[x+1,y-1]),base);poly([[pts[0][0]+2,pts[0][1]+2],[pts[1][0]-1,pts[1][1]+1],[pts[2][0]-1,pts[2][1]+3],[pts[0][0]+4,pts[0][1]+6]],hi);rect(pts[2][0]-3,pts[2][1]+3,5,3,shadow);};
- finger([[8,13],[10,-2],[17,-5],[22,0],[20,18],[14,23]],"#8fa5ba","#d7e3ed","#425a74");
- finger([[17,11],[20,-8],[27,-9],[32,-3],[29,18],[23,22]],"#a8bacb","#edf5fa","#4b637c");
- finger([[27,14],[33,-3],[39,-2],[43,4],[38,23],[32,25]],"#849bb2","#d5e2ed","#405974");
- finger([[36,20],[44,7],[50,9],[52,15],[45,30],[38,30]],"#7189a2","#c5d5e4","#344d68");
- // Thumb wraps across the front of the handle as the hand closes.
- poly([[28,25],[36,20],[47,23],[53,31],[50,38],[43,39],[34,34],[28,32]],"#091321");
- poly([[30,26],[37,23],[46,26],[49,31],[46,35],[39,33],[32,30]],"#91a8bd");
- poly([[34,26],[41,25],[46,29],[40,29]],"#d8e5ef");
- // Stitching, reinforced knuckles, and cloth folds.
- rect(12,29,2,7,"#526c86");rect(22,30,2,7,"#405a75");rect(32,28,2,6,"#405a75");
- rect(5,39,17,2,"#a9bfd0");rect(8,43,11,2,"#344d67");
- g.restore();
- // Ignition: energy races through the rails, console lights wake up, camera kicks.
- if(ignite>0){g.globalAlpha=fade*ignite;for(let i=0;i<22;i++){const y=220+i*8;rect(i%2?0:rw-3,y,3,4,accent);}g.globalAlpha=fade;
-  const glow=g.createRadialGradient(120,205,4,120,205,150*ignite);glow.addColorStop(0,"#d9ffff");glow.addColorStop(.3,accent);glow.addColorStop(1,"rgba(0,0,0,0)");g.globalAlpha=fade*ignite*.38;g.fillStyle=glow;g.fillRect(0,30,rw,300);g.globalAlpha=fade;
-  for(let i=0;i<28;i++){const x=(i*37+t*95)%rw,y=(i*61+t*170)%rh;rect(x,y,2+(i%3),2,"#e8ffff");}
+ const poly=(pts,c)=>{g.fillStyle=c;g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fill();};
+ // Software-rendered voxel scene: each solid is built from discrete cubic voxels,
+ // depth-sorted and projected in perspective, rather than faked with 2D extrusion.
+ const voxels=[];
+ const addVoxel=(x,y,z,color,s=.5)=>voxels.push({x,y,z,color,s});
+ const addBox=(x,y,z,nx,ny,nz,color,s=.5,skip)=> {
+  for(let ix=0;ix<nx;ix++)for(let iy=0;iy<ny;iy++)for(let iz=0;iz<nz;iz++){
+   if(skip&&skip(ix,iy,iz))continue;
+   addVoxel(x+ix*s,y+iy*s,z+iz*s,color,s);
+  }
+ };
+ const project=(x,y,z)=>{const k=1.34-z*.039;return [160+x*k+shake,302-(y-6.2)*k-z*2.05];};
+ const shade=(hex,f)=>{const n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,((n>>16)&255)*f)),gg=Math.max(0,Math.min(255,((n>>8)&255)*f)),b=Math.max(0,Math.min(255,(n&255)*f));return "rgb("+r+","+gg+","+b+")";};
+ const voxel=(v)=>{
+  const s=v.s,{x,y,z}=v,p=[project(x,y,z),project(x+s,y,z),project(x+s,y+s,z),project(x,y+s,z),
+    project(x,y,z+s),project(x+s,y,z+s),project(x+s,y+s,z+s),project(x,y+s,z+s)];
+  // Camera looks toward +Z: front, right and top faces are independently lit.
+  poly([p[0],p[1],p[2],p[3]],shade(v.color,.72));
+  poly([p[1],p[5],p[6],p[2]],shade(v.color,.48));
+  poly([p[3],p[2],p[6],p[7]],shade(v.color,1.22));
+ };
+ const panel=(x,y,z,w,h,color)=>addBox(x,y,z,w,h,1,color,.5);
+ const screen=(x,y,z,w,h,kind)=>{
+  panel(x-.25,y-.25,z,w+.5,h+.5,"#536477");
+  panel(x,y,z+.55,w,h,"#06111b");
+  const colors=kind==="radar"?["#08e6a0","#35ffbf","#1b8c78"]:["#08c8f4","#3c9dff","#b3f4ff"];
+  for(let iy=0;iy<h*2-2;iy++)for(let ix=0;ix<w*2-2;ix++){
+   let on=kind==="radar"?(Math.abs(ix-(w-1))<1||Math.abs(iy-(h-1))<1||((ix*7+iy*11)%19<2)):
+     ((ix*5+iy*3)%13<3||iy===1||iy===h*2-3);
+   if(on)addBox(x+.35+ix*.5,y+.35+iy*.5,z+1.1,1,1,1,colors[(ix+iy)%colors.length],.22);
+  }
+  addBox(x+.4,y+.3,z+1.4,Math.max(1,w*.35),.22,1,kind==="radar"?"#18ffb0":"#f4cf54",.22);
+ };
+ // Dark canopy void and amber/cyan ambient reflections.
+ const bg=g.createLinearGradient(0,0,0,rh);bg.addColorStop(0,"#03060c");bg.addColorStop(.48,"#0a1522");bg.addColorStop(1,"#02050b");g.fillStyle=bg;g.fillRect(0,0,rw,rh);
+ const glow=g.createRadialGradient(160,215,8,160,215,260);glow.addColorStop(0,"rgba(18,102,132,.24)");glow.addColorStop(.55,"rgba(8,30,53,.12)");glow.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=glow;g.fillRect(0,0,rw,rh);
+ // Canopy frame, side ribs and overhead arch are separate volumetric voxel beams.
+ addBox(-12,9,13,24,1,1,"#263447");
+ addBox(-12,9,14,1,7,1,"#34475b");addBox(11,9,14,1,7,1,"#34475b");
+ addBox(-11,15,12,22,1,2,"#182638");
+ for(let x=-10;x<=10;x+=2)addBox(x,15.5,13,1,.5,1,"#9a5826",.5);
+ // Windshield panes: dark glass with a subtle amber/cobalt reflected horizon.
+ const glass= g.createLinearGradient(0,105,0,260);glass.addColorStop(0,"#102b42");glass.addColorStop(.55,"#081827");glass.addColorStop(1,"#10101b");
+ const a=project(-10,9.8,14),b=project(10,9.8,14),c=project(10,15,14),d=project(-10,15,14);
+ poly([a,b,c,d],glass);
+ for(let i=0;i<28;i++){const x=project(-9+(i%14)*1.35,10+(Math.floor(i/14))*2.2,14);rect(x[0],x[1],2,1,i%3?"#18364a":"#b36a32");}
+ // Main instrument wall: deep armor shell, bevels and individually recessed displays.
+ addBox(-11,3.5,11,22,5,2,"#172435");
+ addBox(-10.5,4,10.5,21,4.5,1,"#334458");
+ addBox(-10,4.2,10,20,4,1,"#080f19");
+ screen(-9.2,5.4,10,3.1,2.25,"data");screen(-5.4,5.4,10,3.1,2.25,"radar");
+ screen(2.3,5.4,10,3.1,2.25,"radar");screen(6.1,5.4,10,3.1,2.25,"data");
+ // Center avionics stack, warning lamps and physical toggles.
+ addBox(-1.5,4.1,9.5,3,4.1,2,"#526174");
+ addBox(-1.1,4.5,9,2.2,3.3,1,"#101923");
+ for(let row=0;row<5;row++)for(let col=0;col<3;col++)addBox(-.8+col*.75,7.2-row*.52,10.2,1,1,1,(row+col)%3?"#d84a2f":"#f5a33b",.32);
+ for(let row=0;row<2;row++)for(let col=0;col<6;col++)addBox(-2.6+col*.88,3.9+row*.48,10,".5".length?1:1,1,1,(col+row)%2?"#ff4b28":"#e9a33b",.32);
+ // Radar scopes and lower control banks.
+ screen(-8.8,3.1,9.8,3,1.6,"radar");screen(5.8,3.1,9.8,3,1.6,"radar");
+ addBox(-4.6,2.8,9.6,9.2,1.3,2,"#0b1420");
+ for(let row=0;row<2;row++)for(let col=0;col<18;col++)addBox(-4.3+col*.5,3+row*.5,10.6,1,1,1,(col+row)%4===0?"#ff633c":(col%3===0?"#a7bdc8":"#536b7e"),.22);
+ // Angled side consoles, chunky joysticks, guarded switches and cable channels.
+ for(const side of [-1,1]){
+  addBox(side*9.7-1,1.1,5,2,4,7,"#1b2c40");
+  addBox(side*9.2-1,1.6,5.4,2,3,6,"#34495f");
+  for(let i=0;i<6;i++)addBox(side*9.1-.5,2+i*.38,7+i*.12,1,1,1,i%2?"#0cc7e9":"#ffb43d",.3);
+  addBox(side*10.2,2,6,1,2,1,"#e1b22f");
+  addBox(side*10.2,2.2,6,1,1,2,"#ffcc48");
+  addBox(side*8.7,1.2,8,1,1,2,"#91a8bb");
  }
- // Screen-printed activation typography, restrained and integrated into the HUD.
- g.fillStyle="#eaf8ff";g.font="bold 12px monospace";g.textAlign="center";g.fillText(["OVERDRIVE","PHASE SHIFT","EMP BURST"][ship],120,18);
- g.fillStyle=accent;g.font="bold 6px monospace";g.fillText("PILOT LINK // DRIVE SYSTEM",120,29);
- g.fillStyle="#d5e9f7";g.font="bold 6px monospace";g.fillText(ignite>.6?"THRUST CORE: ONLINE":"THRUST CORE: ARMING",120,407);
- rect(72,413,96,3,"#1b3048");rect(72,413,96*p,3,accent);
+ // Forward console between pilot and dashboard, built as stacked machined plates.
+ addBox(-5,0,2,10,1,9,"#111c2a");
+ addBox(-4.6,.5,2.5,9.2,.6,8,"#536477");
+ addBox(-4.2,1.1,3,8.4,.5,7,"#182638");
+ for(let col=0;col<8;col++)for(let row=0;row<5;row++)addBox(-3.8+col*.95,1.65+row*.08,4+row*.8,1,1,1,(col+row)%4===0?"#e5b95b":"#8ea3b5",.3);
+ // Lever gate and animated throttle. It is a real voxel assembly with a moving shaft/grip.
+ const leverZ=4.5,leverX=2.2,leverY=1.6+grab*.9;
+ addBox(leverX-.8,1.2,leverZ,1.6,.5,2.2,"#d39a42");
+ addBox(leverX-.5,1.7,leverZ+.5,1,.4,1.2,"#25394d");
+ addBox(leverX-.16,leverY,leverZ+.8,.32,2.2, .32,"#b7c5cf",.32);
+ addBox(leverX-.65,leverY+1.8,leverZ+.35,1.3,.65,1.3,"#101820",.32);
+ addBox(leverX-.5,leverY+1.95,leverZ+.2,1,.25,1,"#d9e4eb",.25);
+ // Pilot forearm and flight glove enter from the right, close around the throttle.
+ const armX=4.7-approach*2.6,armY=2.4+grab*.55,armZ=2.1;
+ addBox(armX,armY,armZ,2.2,1.2,3.5,"#263d56");
+ addBox(armX+.3,armY+.3,armZ+.4,1.8,.8,2.8,"#71899f");
+ addBox(armX-.25,armY+.65,armZ+2.5,1.5,1.1,1.8,"#a9bac9");
+ addBox(armX-.1,armY+1.1,armZ+2.8,1.3,.55,1.5,"#d6e1e9");
+ for(let finger=0;finger<4;finger++)addBox(armX-.05+finger*.34,armY+.8,armZ+3.8,.28,.55,1.25,"#d0dce6",.28);
+ addBox(armX-.45,armY+.75,armZ+3.55,.4,.45,1.1,"#8299ae",.28);
+ // Instrument legends and tiny warning labels are screen-space overlays for readability.
+ g.save();g.globalAlpha=fade;
+ for(let i=0;i<12;i++){const x=20+i*25;rect(x,18,7,4,i%3?"#ff7a35":"#ffcf55");rect(x+1,19,3,1,"#fff0b4");}
+ g.fillStyle="#eaf6ff";g.font="bold 11px monospace";g.textAlign="center";g.fillText(["OVERDRIVE","PHASE SHIFT","EMP BURST"][ship],160,42);
+ g.fillStyle=accent;g.font="bold 6px monospace";g.fillText("FLIGHT DECK // PILOT LINK",160,53);
+ g.fillStyle="#d8e9f5";g.font="bold 7px monospace";g.fillText(power>.6?"THRUST CORE: ONLINE":"THRUST CORE: ARMING",160,540);
+ rect(90,548,140,4,"#26394b");rect(90,548,140*ease(t/3),4,accent);
  g.restore();
+ // Draw the voxel model in far-to-near order; all geometry is reprojected every frame.
+ voxels.sort((a,b)=>b.z-a.z||a.y-b.y||a.x-b.x);
+ g.save();g.globalAlpha=fade;for(const v of voxels)voxel(v);g.restore();
+ // Activation lighting sweeps across the real 3D cockpit surfaces.
+ if(power>0){g.save();g.globalAlpha=fade*power*.22;const pulse=g.createRadialGradient(160,300,4,160,300,210);pulse.addColorStop(0,accent);pulse.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=pulse;g.fillRect(0,70,rw,rh-70);g.restore();
+  for(let i=0;i<24;i++){const x=(i*43+t*110)%rw,y=(i*67+t*150)%rh;rect(x,y,2+(i%3),2,"#e9ffff");}}
  ctx.save();ctx.globalAlpha=fade;ctx.imageSmoothingEnabled=false;ctx.drawImage(frame,0,0,W,H);ctx.imageSmoothingEnabled=true;ctx.restore();
 }
 function draw(){ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;ctx.drawImage(backdrop,0,0,W,H);ctx.imageSmoothingEnabled=true;ctx.strokeStyle="#1b2945";ctx.globalAlpha=.28;ctx.lineWidth=1;for(let x=0;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}ctx.globalAlpha=1;

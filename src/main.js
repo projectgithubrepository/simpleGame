@@ -122,113 +122,95 @@ function drawThruster(){if(!player.thrustDir)return;const movingRight=player.thr
 function drawShip(){ctx.save();ctx.translate(player.x+18,player.y+21);ctx.rotate(player.tilt);if(ship===1&&specialTimer>0){ctx.globalAlpha=.48;ctx.strokeStyle="#c5a6ff";ctx.lineWidth=3;ctx.shadowBlur=20;ctx.shadowColor="#c5a6ff";ctx.beginPath();ctx.arc(0,0,29,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}if(player.shield){ctx.strokeStyle="#50f6ed";ctx.lineWidth=3;ctx.shadowBlur=18;ctx.shadowColor="#50f6ed";ctx.beginPath();ctx.arc(0,0,33,0,Math.PI*2);ctx.stroke();ctx.fillStyle="#50f6ed22";ctx.fill();ctx.shadowBlur=0;}drawStack(ships[ship],0,0,57);ctx.restore();drawThruster();}
 function drawSpecialCinematic(){
  if(specialCinematic<=0)return;
- const t=3-specialCinematic,p=Math.min(1,t/3),fade=Math.min(1,t/.18,specialCinematic/.24),accent=palettes[ship][0];
- ctx.save();ctx.globalAlpha=fade;
- // Cinematic wipe: the cockpit appears to assemble in depth, like a hand-built mecha cockpit.
- ctx.fillStyle="#02040d";ctx.fillRect(0,0,W,H);
- const ease=Math.min(1,Math.max(0,t/.42)),depth=1-Math.pow(1-ease,3);
- const cx=W/2,top=H*.075,base=H*.79;
- function poly(points,fill,stroke=null,lw=1){ctx.beginPath();points.forEach((v,i)=>i?ctx.lineTo(v[0],v[1]):ctx.moveTo(v[0],v[1]));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();}}
- function extrude(points,dx,dy,layers,front,side,stroke){
-  // True sprite-stacking illusion: many individually shaded silhouettes create visible thickness.
-  for(let z=layers;z>=1;z--){const k=z/layers;ctx.globalAlpha=fade*(.24+.48*(1-k));const shifted=points.map(([x,y])=>[x+dx*k,y+dy*k]);poly(shifted,side);}
-  ctx.globalAlpha=fade;poly(points,front,stroke,2);
+ const t=3-specialCinematic,p=Math.min(1,t/3),fade=Math.min(1,t/.12,specialCinematic/.2);
+ const accent=palettes[ship][0],mid=palettes[ship][1];
+ // Rebuilt as a dedicated low-resolution pixel-art shot. The previous vector cockpit
+ // and tiny glove are deliberately gone: this is a close, physical pilot POV.
+ const rw=240,rh=424,frame=document.createElement("canvas");frame.width=rw;frame.height=rh;
+ const g=frame.getContext("2d");g.imageSmoothingEnabled=false;
+ const clamp01=v=>Math.max(0,Math.min(1,v));
+ const ease=v=>{v=clamp01(v);return v*v*(3-2*v);};
+ const enter=ease((t-.28)/.72),grab=ease((t-1.02)/.55),ignite=ease((t-1.72)/.65);
+ const shake=ignite*(Math.sin(t*52)*2+Math.sin(t*31)*1.2);
+ const poly=(pts,color)=>{g.fillStyle=color;g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fill();};
+ const stack=(pts,depth,face,side)=>{for(let z=depth;z>0;z--)poly(pts.map(([x,y])=>[x+z*.48,y+z*.65]),side);poly(pts,face);};
+ const rect=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));};
+ g.save();g.translate(shake,0);g.globalAlpha=fade;
+ // Deep hangar-black cockpit with a real layered windshield, not a flat neon frame.
+ const bg=g.createLinearGradient(0,0,0,rh);bg.addColorStop(0,"#07101d");bg.addColorStop(.55,"#101c2c");bg.addColorStop(1,"#030711");g.fillStyle=bg;g.fillRect(0,0,rw,rh);
+ for(let i=0;i<170;i++){const x=(i*73)%rw,y=(i*137)%rh;rect(x,y,1+(i%3===0),1,i%5===0?"#718da8":"#263b55");}
+ stack([[0,34],[35,12],[205,12],[240,34],[224,260],[16,260]],12,"#263c56","#0a1422");
+ stack([[13,43],[43,27],[197,27],[227,43],[212,232],[28,232]],8,"#60758c","#17283d");
+ // Windshield glass has reflected planet light and layered atmospheric bands.
+ poly([[28,52],[57,38],[183,38],[212,52],[201,197],[39,197]],"#081c31");
+ const sky=g.createLinearGradient(0,42,0,198);sky.addColorStop(0,"#173b59");sky.addColorStop(.58,"#10243d");sky.addColorStop(1,"#241d3a");g.fillStyle=sky;g.fillRect(43,48,154,145);
+ for(let i=0;i<44;i++){const x=(i*47)%154+43,y=(i*83)%145+48;rect(x,y,1+(i%3),1,i%4===0?"#d8efff":"#8ca9c3");}
+ // A huge distant world, rendered in hard pixel clusters with a bright atmospheric rim.
+ const px=122+Math.sin(t*.5)*2,py=111,pr=36;
+ g.fillStyle="#9bd9ed";g.beginPath();g.arc(px,py,pr+2,0,Math.PI*2);g.fill();
+ g.fillStyle="#385c83";g.beginPath();g.arc(px,py,pr,0,Math.PI*2);g.fill();
+ g.save();g.beginPath();g.arc(px,py,pr,0,Math.PI*2);g.clip();
+ for(let i=0;i<95;i++){const x=px-34+(i*19)%68,y=py-33+(i*29)%66;rect(x,y,3+(i%8),2+(i%4),i%3===0?"#b5d2d7":i%3===1?"#547a9b":"#243f62");}
+ rect(px-30,py-14,65,4,"#203d61");rect(px-35,py+12,73,5,"#1d3558");
+ g.restore();
+ g.strokeStyle="#b5ecff";g.lineWidth=1;g.beginPath();g.ellipse(px,py,58,13,-.16,0,Math.PI*2);g.stroke();
+ // Strong perspective rails, bolts and warning lights give the cockpit physical scale.
+ for(let side of [0,1]){const x=side?220:20;poly(side?[[x,42],[x+8,49],[x-5,210],[x-15,222]]:[[x,42],[x+15,49],[x+5,210],[x-5,222]],"#a7b9c9");rect(side?216:17,70,4,116,accent);for(let j=0;j<5;j++){rect(side?210:25,72+j*27,5,4,j%2? "#8aa2b9":"#effaff");}}
+ // Lower console: stacked armor plates, inset displays, tactile switches and labels.
+ stack([[0,250],[38,220],[202,220],[240,250],[240,424],[0,424]],18,"#34465d","#0a1220");
+ stack([[13,267],[55,239],[185,239],[227,267],[217,398],[23,398]],10,"#172a40","#080f1b");
+ // Recessed instrument wells with tiny pixel telemetry.
+ for(let side=0;side<2;side++){const x=side?164:25;stack([[x,266],[x+50,266],[x+46,315],[x+4,315]],4,"#080f1b","#02060c");rect(x+5,273,39,2,accent);for(let k=0;k<6;k++){rect(x+6+k*6,286+(k%2)*5,3,13-(k%3)*3,k%2?"#6b8da8":"#d0f5ff");}rect(x+7,307,28,2,"#526d86");}
+ rect(95,259,50,28,"#071321");rect(99,263,42,20,"#102d43");rect(102,266,36,2,accent);rect(102,272,22,2,"#d8efff");rect(102,278,30,2,"#7197b7");
+ // Lever socket and rails in the foreground.
+ stack([[80,330],[160,330],[177,424],[63,424]],12,"#52677f","#101c2d");
+ stack([[101,300],[139,300],[146,375],[94,375]],12,"#1c3048","#070e18");
+ for(let k=0;k<5;k++){rect(101+k*7,310,3,49,k%2?"#506a86":"#263d58");}
+ const leverY=365-grab*36;
+ stack([[108,leverY],[132,leverY],[137,leverY+43],[103,leverY+43]],8,"#93a9bd","#263b55");
+ stack([[99,leverY-12],[141,leverY-12],[146,leverY+9],[94,leverY+9]],8,accent,"#12374d");
+ rect(103,leverY-8,34,3,"#e9ffff");rect(106,leverY+3,27,2,"#16435d");
+ // Pilot's arm enters from frame-right. Hand is a normal padded flight glove,
+ // with a clear wrist, palm, four curled fingers and opposing thumb — never robotic.
+ const hx=174-enter*48,hy=leverY-18+enter*4;
+ g.save();g.translate(hx,hy);g.rotate(-.12-grab*.12);
+ // Sleeve and cuff, each with stacked thickness and fabric seams.
+ stack([[-8,25],[17,18],[39,43],[30,77],[2,70],[-13,47]],9,"#263b55","#091421");
+ poly([[-4,27],[16,21],[31,39],[23,64],[3,61],[-8,43]],"#667f98");
+ rect(1,31,21,3,"#a9bfd0");rect(4,37,17,2,"#314d69");
+ stack([[1,14],[27,8],[39,23],[30,43],[7,42],[-3,28]],7,"#25384f","#08111d");
+ // Palm silhouette with broad heel and anatomically connected finger base.
+ poly([[4,17],[8,8],[18,3],[34,6],[43,16],[42,30],[34,40],[18,44],[7,37],[1,27]],"#0a1421");
+ poly([[7,17],[11,10],[19,7],[32,9],[39,17],[38,29],[32,36],[18,40],[9,34],[5,26]],"#8298ad");
+ poly([[10,15],[17,9],[29,11],[35,17],[27,20],[15,20]],"#c5d4df");
+ poly([[8,22],[17,20],[20,32],[14,36],[8,31]],"#a3b5c7");
+ poly([[21,23],[36,20],[37,29],[30,36],[20,34]],"#526c86");
+ // Four padded fingers fold over the grip; segmented shading reads as fabric, not metal.
+ const finger=(pts,base,hi,shadow)=>{poly(pts,"#08111d");poly(pts.map(([x,y])=>[x+1,y-1]),base);poly([[pts[0][0]+2,pts[0][1]+2],[pts[1][0]-1,pts[1][1]+1],[pts[2][0]-1,pts[2][1]+3],[pts[0][0]+4,pts[0][1]+6]],hi);rect(pts[2][0]-3,pts[2][1]+3,5,3,shadow);};
+ finger([[8,13],[10,-2],[17,-5],[22,0],[20,18],[14,23]],"#8fa5ba","#d7e3ed","#425a74");
+ finger([[17,11],[20,-8],[27,-9],[32,-3],[29,18],[23,22]],"#a8bacb","#edf5fa","#4b637c");
+ finger([[27,14],[33,-3],[39,-2],[43,4],[38,23],[32,25]],"#849bb2","#d5e2ed","#405974");
+ finger([[36,20],[44,7],[50,9],[52,15],[45,30],[38,30]],"#7189a2","#c5d5e4","#344d68");
+ // Thumb wraps across the front of the handle as the hand closes.
+ poly([[28,25],[36,20],[47,23],[53,31],[50,38],[43,39],[34,34],[28,32]],"#091321");
+ poly([[30,26],[37,23],[46,26],[49,31],[46,35],[39,33],[32,30]],"#91a8bd");
+ poly([[34,26],[41,25],[46,29],[40,29]],"#d8e5ef");
+ // Stitching, reinforced knuckles, and cloth folds.
+ rect(12,29,2,7,"#526c86");rect(22,30,2,7,"#405a75");rect(32,28,2,6,"#405a75");
+ rect(5,39,17,2,"#a9bfd0");rect(8,43,11,2,"#344d67");
+ g.restore();
+ // Ignition: energy races through the rails, console lights wake up, camera kicks.
+ if(ignite>0){g.globalAlpha=fade*ignite;for(let i=0;i<22;i++){const y=220+i*8;rect(i%2?0:rw-3,y,3,4,accent);}g.globalAlpha=fade;
+  const glow=g.createRadialGradient(120,205,4,120,205,150*ignite);glow.addColorStop(0,"#d9ffff");glow.addColorStop(.3,accent);glow.addColorStop(1,"rgba(0,0,0,0)");g.globalAlpha=fade*ignite*.38;g.fillStyle=glow;g.fillRect(0,30,rw,300);g.globalAlpha=fade;
+  for(let i=0;i<28;i++){const x=(i*37+t*95)%rw,y=(i*61+t*170)%rh;rect(x,y,2+(i%3),2,"#e8ffff");}
  }
- // Deep armored canopy: outer shell, bevels and nested glass create a tunnel rather than a flat frame.
- const shell=[[10,top+35],[cx-48,top],[cx+48,top],[W-10,top+35],[W-34,H*.61],[W-72,base],[72,base],[34,H*.61]];
- extrude(shell,0,20,22,"#182b48","#091323","#7295bf");
- const rim=[[27,top+43],[cx-39,top+17],[cx+39,top+17],[W-27,top+43],[W-49,H*.59],[W-85,base-19],[85,base-19],[49,H*.59]];
- extrude(rim,0,12,16,"#243e62","#101e35",accent);
- const glass=[[49,top+58],[cx-29,top+35],[cx+29,top+35],[W-49,top+58],[W-68,H*.55],[W-101,H*.69],[101,H*.69],[68,H*.55]];
- const sky=ctx.createLinearGradient(0,top,0,H*.7);sky.addColorStop(0,"#102f55");sky.addColorStop(.5,"#07172e");sky.addColorStop(1,"#160e30");poly(glass,sky,"#8cecff",2);
- // Layered distant planet, orbital rings and a fast-moving starfield.
- ctx.save();ctx.beginPath();ctx.moveTo(...glass[0]);glass.slice(1).forEach(v=>ctx.lineTo(...v));ctx.closePath();ctx.clip();
- const planetX=cx+(ship-1)*W*.12,planetY=H*.34,planetR=H*.105;
- const pg=ctx.createRadialGradient(planetX-planetR*.35,planetY-planetR*.45,2,planetX,planetY,planetR);pg.addColorStop(0,"#e8faff");pg.addColorStop(.18,accent);pg.addColorStop(.62,"#304a81");pg.addColorStop(1,"#090d24");
- ctx.fillStyle=pg;ctx.beginPath();ctx.arc(planetX,planetY,planetR,0,Math.PI*2);ctx.fill();
- ctx.strokeStyle=accent;ctx.globalAlpha=fade*.55;ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(planetX,planetY,planetR*1.65,planetR*.42,-.2,0,Math.PI*2);ctx.stroke();
- for(let i=0;i<90;i++){const seed=i*91.73;const x=((seed*13+t*(70+(i%6)*38))%(W+80))-40;const y=((seed*31+t*(120+(i%5)*55))%(H*.68));const len=2+Math.min(30,t*10)*(i%4===0?1:.18);ctx.globalAlpha=fade*(.25+(i%5)*.12);ctx.strokeStyle=i%7===0?accent:"#e4f5ff";ctx.lineWidth=i%9===0?2:1;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-len*.35,y+len);ctx.stroke();}
- // Perspective guide rails converge toward the vanishing point.
- ctx.globalAlpha=fade*.5;ctx.strokeStyle=accent;ctx.lineWidth=1.5;for(let i=0;i<9;i++){const x=i*W/8;ctx.beginPath();ctx.moveTo(cx+(x-cx)*.08,H*.31);ctx.lineTo(x,H*.72);ctx.stroke();}
- ctx.restore();
- // Canopy braces, exposed hydraulic pistons and luminous mechanical fasteners.
- for(const side of [-1,1]){
-  const sx=side<0?34:W-34,ex=side<0?W*.19:W*.81;
-  ctx.strokeStyle="#b5d8ef";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(sx,H*.19);ctx.lineTo(ex,H*.67);ctx.stroke();
-  ctx.strokeStyle=accent;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(sx+side*7,H*.2);ctx.lineTo(ex+side*4,H*.65);ctx.stroke();
-  for(let j=0;j<4;j++){const y=H*(.22+j*.105);ctx.fillStyle="#d9f6ff";ctx.shadowColor=accent;ctx.shadowBlur=12;ctx.beginPath();ctx.arc(side<0?42+j*4:W-42-j*4,y,3,0,Math.PI*2);ctx.fill();}
- }
- ctx.shadowBlur=0;
- // Heavy lower cockpit dashboard, layered like an anime mecha control deck.
- const dash=[[0,H*.72],[W*.18,H*.67],[W*.34,H*.71],[W*.66,H*.71],[W*.82,H*.67],[W,H*.72],[W,H],[0,H]];
- extrude(dash,0,18,20,"#1c2d49","#080e1d","#536e99");
- const consolePoly=[[W*.08,H*.77],[W*.31,H*.72],[W*.69,H*.72],[W*.92,H*.77],[W*.84,H*.94],[W*.16,H*.94]];
- extrude(consolePoly,0,9,10,"#263e60","#101b31",accent);
- // Instrument clusters and animated telemetry.
- for(let side=0;side<2;side++){
-  const x=side===0?W*.2:W*.8;
-  ctx.fillStyle="#071326";ctx.strokeStyle=accent;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(x-W*.095,H*.775,W*.19,H*.12,8);ctx.fill();ctx.stroke();
-  ctx.strokeStyle="#5e8fb8";ctx.lineWidth=1;for(let j=0;j<4;j++){ctx.beginPath();ctx.moveTo(x-W*.07+j*W*.035,H*.86);ctx.lineTo(x-W*.07+j*W*.035,H*.80+(j%2)*7);ctx.stroke();}
-  ctx.fillStyle=accent;ctx.font="bold 9px monospace";ctx.textAlign="center";ctx.fillText(side===0?"REACTOR":"GYRO",x,H*.795);
- }
- // Center holographic reticle and targeting brackets.
- ctx.strokeStyle="#d9fbff";ctx.lineWidth=1.5;ctx.globalAlpha=fade*.8;ctx.beginPath();ctx.arc(cx,H*.43,16+Math.sin(t*9)*3,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(cx-34,H*.43);ctx.lineTo(cx-20,H*.43);ctx.moveTo(cx+20,H*.43);ctx.lineTo(cx+34,H*.43);ctx.moveTo(cx,H*.43-34);ctx.lineTo(cx,H*.43-20);ctx.moveTo(cx,H*.43+20);ctx.lineTo(cx,H*.43+34);ctx.stroke();
- // A massive throttle column advances toward the camera in 3D stacked perspective.
- const push=Math.min(1,Math.max(0,(t-.22)/.62)),leverX=cx+W*.285,leverBase=H*.83,leverY=leverBase-push*H*.115;
- const handX=leverX+5,handY=leverY+15;
- const column=[[leverX-13,leverBase],[leverX+13,leverBase],[leverX+9,leverY+18],[leverX-9,leverY+18]];
- extrude(column,7,7,16,"#8ba9c9","#344c6c","#d8f4ff");
- const grip=[[leverX-23,leverY+12],[leverX-19,leverY-10],[leverX-9,leverY-20],[leverX+12,leverY-20],[leverX+23,leverY-8],[leverX+20,leverY+15],[leverX+8,leverY+25],[leverX-13,leverY+23]];
- extrude(grip,5,7,18,accent,"#163c5b","#e8ffff");
- ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(leverX-12,leverY-8);ctx.lineTo(leverX+12,leverY-8);ctx.stroke();
- // Human pilot hand: four curled fingers, a broad palm, opposing thumb and fabric cuff.
- // Low-resolution shapes keep the pixel-art edges crisp while preserving anatomy.
- const gloveCanvas=document.createElement("canvas");gloveCanvas.width=gloveCanvas.height=72;
- const gg=gloveCanvas.getContext("2d");gg.imageSmoothingEnabled=false;
- const handPoly=(pts,color)=>{gg.fillStyle=color;gg.beginPath();pts.forEach(([x,y],i)=>i?gg.lineTo(x,y):gg.moveTo(x,y));gg.closePath();gg.fill();};
- // Cuff sits behind the palm and narrows naturally at the wrist.
- handPoly([[17,43],[37,43],[40,66],[35,70],[19,66]],"#101a2a");
- handPoly([[19,44],[35,44],[37,64],[33,67],[21,64]],"#536985");
- gg.fillStyle="#a9bfd7";gg.fillRect(21,46,12,2);gg.fillRect(22,51,10,1);
- gg.fillStyle="#263b57";gg.fillRect(21,56,13,7);
- // Palm silhouette and soft fabric planes.
- handPoly([[12,29],[15,22],[22,18],[37,18],[45,23],[49,31],[47,42],[41,49],[29,52],[19,48],[13,41]],"#0a1423");
- handPoly([[14,29],[17,23],[23,20],[36,20],[43,24],[47,32],[44,41],[39,46],[29,49],[20,45],[15,39]],"#7188a5");
- handPoly([[18,25],[24,21],[36,22],[41,26],[35,30],[23,30]],"#c5d6e8");
- handPoly([[17,30],[23,29],[27,38],[24,44],[18,40]],"#91a8c2");
- handPoly([[27,31],[40,29],[44,34],[40,42],[30,45],[26,39]],"#435d7c");
- // Four fingers curve over the grip; each has a knuckle ridge and shaded underside.
- const digit=(pts,hi,mid,shade)=>{handPoly(pts,"#0a1423");handPoly(pts.map(([x,y])=>[x+1,y+1]),mid);gg.fillStyle=hi;gg.fillRect(pts[0][0]+2,pts[0][1]+2,Math.max(3,pts[1][0]-pts[0][0]-3),2);gg.fillStyle=shade;gg.fillRect(pts[pts.length-2][0]+1,pts[pts.length-2][1]+1,4,2);};
- digit([[17,23],[20,9],[25,6],[29,9],[27,25],[23,30]],"#dbe8f5","#a8bdd2","#425a77");
- digit([[25,21],[28,5],[33,3],[37,7],[35,25],[31,29]],"#f1f6fb","#c2d3e4","#526b89");
- digit([[34,22],[38,7],[43,7],[46,11],[43,28],[39,31]],"#dbe8f5","#a6bad0","#435b78");
- digit([[42,27],[47,14],[51,15],[53,19],[49,34],[45,36]],"#cbd9e8","#8da4bf","#344d6b");
- // Thumb crosses the front of the palm and hooks around the throttle.
- handPoly([[37,34],[43,31],[51,32],[57,37],[57,42],[53,46],[46,44],[40,41]],"#0a1423");
- handPoly([[39,35],[44,33],[51,34],[55,38],[54,41],[51,43],[45,41],[40,39]],"#7189a6");
- handPoly([[43,35],[50,35],[53,38],[49,39],[44,38]],"#c5d6e8");
- // Stitching, knuckle seams and restrained highlights.
- gg.fillStyle="#edf6ff";gg.fillRect(22,23,3,1);gg.fillRect(31,20,3,1);gg.fillRect(40,23,3,1);
- gg.fillStyle="#263d59";gg.fillRect(24,33,1,8);gg.fillRect(33,32,1,9);gg.fillRect(41,31,1,6);
- gg.fillStyle="#9eb3ca";gg.fillRect(19,45,9,1);gg.fillRect(21,48,8,1);
- // Build thickness from many offset copies, then render a crisp nearest-neighbour face.
- const gloveX=handX-17,gloveY=handY-24,gloveScale=1.12;
- ctx.save();ctx.translate(gloveX,gloveY);ctx.rotate(-.12-push*.08);
- for(let z=13;z>=1;z--){ctx.globalAlpha=fade*(.12+.035*(14-z));ctx.drawImage(gloveCanvas,z*.55,-z*.38,72*gloveScale,72*gloveScale);}
- ctx.globalAlpha=fade;ctx.imageSmoothingEnabled=false;ctx.shadowColor="#000";ctx.shadowBlur=5;
- ctx.drawImage(gloveCanvas,0,0,72*gloveScale,72*gloveScale);ctx.shadowBlur=0;ctx.imageSmoothingEnabled=true;
- // Small stitched cuff tab catches the cockpit light.
- ctx.fillStyle=accent;ctx.globalAlpha=fade*.8;ctx.fillRect(12*gloveScale,49*gloveScale,11*gloveScale,1.5);
- ctx.restore();
- // Dramatic speed streaks radiate from the windshield as the power engages.
- ctx.globalAlpha=fade*Math.min(1,t*2);ctx.strokeStyle=accent;ctx.lineWidth=2;for(let i=0;i<18;i++){const a=i*Math.PI*2/18;const r1=H*.18,r2=H*(.24+push*.23);ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r1,H*.39+Math.sin(a)*r1);ctx.lineTo(cx+Math.cos(a)*r2,H*.39+Math.sin(a)*r2);ctx.stroke();}
- ctx.globalAlpha=fade;ctx.textAlign="center";ctx.fillStyle="#fff";ctx.font="900 22px sans-serif";ctx.shadowColor=accent;ctx.shadowBlur=20;ctx.fillText(["OVERDRIVE","PHASE SHIFT","EMP BURST"][ship],cx,H*.115);ctx.shadowBlur=0;
- ctx.fillStyle="#b9d8ef";ctx.font="bold 9px monospace";ctx.fillText("NEURAL LINK  //  PILOT SYSTEM ONLINE",cx,H*.145);
- // Anime-style warning chevrons and activation bar.
- ctx.fillStyle=accent;ctx.font="bold 10px monospace";ctx.fillText(">> DRIVE LIMITER RELEASED <<",cx,H*.64);
- ctx.fillStyle="#263a59";ctx.fillRect(cx-75,H*.965,150,4);ctx.fillStyle=accent;ctx.fillRect(cx-75,H*.965,150*p,4);
- ctx.fillStyle="#e8f7ff";ctx.font="bold 9px monospace";ctx.fillText("SYSTEM OVERRIDE  ·  03 SEC",cx,H*.948);
- ctx.restore();
+ // Screen-printed activation typography, restrained and integrated into the HUD.
+ g.fillStyle="#eaf8ff";g.font="bold 12px monospace";g.textAlign="center";g.fillText(["OVERDRIVE","PHASE SHIFT","EMP BURST"][ship],120,18);
+ g.fillStyle=accent;g.font="bold 6px monospace";g.fillText("PILOT LINK // DRIVE SYSTEM",120,29);
+ g.fillStyle="#d5e9f7";g.font="bold 6px monospace";g.fillText(ignite>.6?"THRUST CORE: ONLINE":"THRUST CORE: ARMING",120,407);
+ rect(72,413,96,3,"#1b3048");rect(72,413,96*p,3,accent);
+ g.restore();
+ ctx.save();ctx.globalAlpha=fade;ctx.imageSmoothingEnabled=false;ctx.drawImage(frame,0,0,W,H);ctx.imageSmoothingEnabled=true;ctx.restore();
 }
 function draw(){ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;ctx.drawImage(backdrop,0,0,W,H);ctx.imageSmoothingEnabled=true;ctx.strokeStyle="#1b2945";ctx.globalAlpha=.28;ctx.lineWidth=1;for(let x=0;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}ctx.globalAlpha=1;
  obstacles.forEach(o=>{ctx.shadowBlur=13;ctx.shadowColor=o.type==="mine"?"#ff4e9b":"#9ba8cc";drawStack(o.type==="mine"?mine:rock,o.x+o.w/2,o.y+o.h/2,o.w,o.spin?o.angle:0);});ctx.shadowBlur=0;

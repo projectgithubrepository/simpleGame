@@ -173,7 +173,6 @@ function drawSpecialCinematic(){
  // Small stitched cuff tab catches the cockpit light.
  ctx.fillStyle=accent;ctx.globalAlpha=fade*.8;ctx.fillRect(12*gloveScale,49*gloveScale,11*gloveScale,1.5);
  ctx.restore();
- ctx.restore();
  // Dramatic speed streaks radiate from the windshield as the power engages.
  ctx.globalAlpha=fade*Math.min(1,t*2);ctx.strokeStyle=accent;ctx.lineWidth=2;for(let i=0;i<18;i++){const a=i*Math.PI*2/18;const r1=H*.18,r2=H*(.24+push*.23);ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r1,H*.39+Math.sin(a)*r1);ctx.lineTo(cx+Math.cos(a)*r2,H*.39+Math.sin(a)*r2);ctx.stroke();}
  ctx.globalAlpha=fade;ctx.textAlign="center";ctx.fillStyle="#fff";ctx.font="900 22px sans-serif";ctx.shadowColor=accent;ctx.shadowBlur=20;ctx.fillText(["OVERDRIVE","PHASE SHIFT","EMP BURST"][ship],cx,H*.115);ctx.shadowBlur=0;

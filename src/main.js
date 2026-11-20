@@ -13,7 +13,34 @@ const playButton = document.querySelector("#play-button");
 const soundButton = document.querySelector("#sound-button");
 
 const W = canvas.width, H = canvas.height;
-const player = { x: W / 2 - 17, y: H - 82, width: 34, height: 34, speed: 330 };
+const player = { x: W / 2 - 17, y: H - 82, width: 34, height: 34, speed: 330, spin: 0, yaw: 0 };
+
+// A real sprite-stack: the same pixel-art slice is layered along the depth axis.
+// Yaw offsets the individual slices; roll rotates the complete stack in flight.
+function createShipSlice() {
+  const sprite = document.createElement("canvas");
+  sprite.width = 64; sprite.height = 64;
+  const s = sprite.getContext("2d");
+  s.imageSmoothingEnabled = false;
+  s.fillStyle = "#123c55";
+  s.beginPath(); s.moveTo(32, 3); s.lineTo(39, 20); s.lineTo(59, 39);
+  s.lineTo(47, 43); s.lineTo(42, 56); s.lineTo(32, 49);
+  s.lineTo(22, 56); s.lineTo(17, 43); s.lineTo(5, 39);
+  s.lineTo(25, 20); s.closePath(); s.fill();
+  s.fillStyle = "#50f6ed";
+  s.beginPath(); s.moveTo(32, 5); s.lineTo(37, 24); s.lineTo(32, 43);
+  s.lineTo(27, 24); s.closePath(); s.fill();
+  s.fillStyle = "#d9fffd";
+  s.fillRect(30, 13, 4, 17);
+  s.fillStyle = "#ff4e9b";
+  s.fillRect(9, 38, 8, 4); s.fillRect(47, 38, 8, 4);
+  s.fillStyle = "#ffb45c";
+  s.fillRect(25, 48, 5, 9); s.fillRect(34, 48, 5, 9);
+  s.fillStyle = "#a4ffff";
+  s.fillRect(28, 28, 3, 5); s.fillRect(33, 28, 3, 5);
+  return sprite;
+}
+const shipSlice = createShipSlice();
 let obstacles = [], particles = [], running = false, elapsed = 0, spawnTimer = 0;
 let lastTime = 0, pointerDirection = 0, soundOn = false, audioContext = null;
 let best = Number(localStorage.getItem("neon-dodge-best") || 0);
@@ -63,7 +90,7 @@ function burst(x, y) {
   for (let i = 0; i < 18; i++) particles.push({ x, y, vx: (Math.random() - .5) * 260, vy: (Math.random() - .5) * 260, life: .5 });
 }
 function update(dt) {
-  elapsed += dt;
+  elapsed += dt;\n  player.spin += dt * 1.35;\n  player.yaw += dt * 1.05;
   const direction = (keys.has("ArrowRight") || keys.has("d") || keys.has("D") ? 1 : 0) -
     (keys.has("ArrowLeft") || keys.has("a") || keys.has("A") ? 1 : 0) || pointerDirection;
   player.x = clamp(player.x + direction * player.speed * dt, 8, W - player.width - 8);
@@ -79,7 +106,27 @@ function update(dt) {
   }
   scoreEl.textContent = calculateScore(elapsed);
 }
-function draw() {
+function drawStackedShip() {
+  const cx = player.x + player.width / 2;
+  const cy = player.y + player.height / 2;
+  const layers = 18;
+  ctx.save();
+  ctx.translate(cx, cy);
+  // Full 360-degree flight roll; no scaling or warping of the sprite.
+  ctx.rotate(player.spin);
+  for (let i = layers - 1; i >= 0; i--) {
+    const depth = i - (layers - 1) / 2;
+    const sideShift = Math.sin(player.yaw) * depth * 0.72;
+    const shade = 0.42 + (i / layers) * 0.58;
+    ctx.globalAlpha = 0.96;
+    ctx.filter = `brightness(${shade})`;
+    ctx.drawImage(shipSlice, -32 + sideShift, -32 + depth * 0.72, 64, 64);
+  }
+  ctx.filter = "none";
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+\nfunction draw() {
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = "#080c1d"; ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = "#17213e"; ctx.lineWidth = 1;
@@ -89,9 +136,7 @@ function draw() {
     ctx.shadowBlur = 16; ctx.shadowColor = `hsl(${o.hue} 100% 60%)`;
     ctx.fillStyle = `hsl(${o.hue} 100% 62%)`; ctx.fillRect(o.x, o.y, o.width, o.height);
   }
-  ctx.shadowBlur = 20; ctx.shadowColor = "#50f6ed";
-  ctx.fillStyle = "#50f6ed";
-  ctx.beginPath(); ctx.moveTo(player.x + 17, player.y); ctx.lineTo(player.x + 34, player.y + 32); ctx.lineTo(player.x + 17, player.y + 25); ctx.lineTo(player.x, player.y + 32); ctx.closePath(); ctx.fill();
+  drawStackedShip();
   ctx.shadowBlur = 0;
   for (const p of particles) { ctx.globalAlpha = Math.max(0, p.life * 2); ctx.fillStyle = "#ff4e9b"; ctx.fillRect(p.x, p.y, 4, 4); }
   ctx.globalAlpha = 1;

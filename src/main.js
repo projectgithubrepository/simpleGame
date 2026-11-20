@@ -79,21 +79,92 @@ function update(dt){
 }
 function drawThruster(){if(!player.thrustDir)return;const movingRight=player.thrustDir>0,flame=13+Math.sin(player.thrustPulse)*7;ctx.save();ctx.translate(player.x+18,player.y+21);ctx.rotate(player.tilt);const edge=movingRight?-18:18,tip=edge+(movingRight?-flame:flame);ctx.shadowColor="#ff8a35";ctx.shadowBlur=24;const grad=ctx.createLinearGradient(edge,0,tip,0);grad.addColorStop(0,"#fffbd0");grad.addColorStop(.35,"#ffbd48");grad.addColorStop(1,"#ff3d35");ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(edge,-6);ctx.quadraticCurveTo((edge+tip)/2,-12,tip,0);ctx.quadraticCurveTo((edge+tip)/2,12,edge,6);ctx.closePath();ctx.fill();ctx.fillStyle="#fff";ctx.globalAlpha=.95;ctx.beginPath();ctx.moveTo(edge,-2);ctx.lineTo(tip*.82,0);ctx.lineTo(edge,2);ctx.closePath();ctx.fill();ctx.restore();}
 function drawShip(){ctx.save();ctx.translate(player.x+18,player.y+21);ctx.rotate(player.tilt);if(ship===1&&specialTimer>0){ctx.globalAlpha=.48;ctx.strokeStyle="#c5a6ff";ctx.lineWidth=3;ctx.shadowBlur=20;ctx.shadowColor="#c5a6ff";ctx.beginPath();ctx.arc(0,0,29,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}if(player.shield){ctx.strokeStyle="#50f6ed";ctx.lineWidth=3;ctx.shadowBlur=18;ctx.shadowColor="#50f6ed";ctx.beginPath();ctx.arc(0,0,33,0,Math.PI*2);ctx.stroke();ctx.fillStyle="#50f6ed22";ctx.fill();ctx.shadowBlur=0;}drawStack(ships[ship],0,0,57);ctx.restore();drawThruster();}
-function drawSpecialCinematic(){if(specialCinematic<=0)return;const t=3-specialCinematic,p=Math.min(1,t/3),fade=Math.min(1,t/.22,specialCinematic/.28),accent=palettes[ship][0];ctx.save();ctx.globalAlpha=.94*fade;ctx.fillStyle="#030713";ctx.fillRect(0,0,W,H);
-// Forward cockpit view: panoramic windshield, stars and a tunnel of light.
-const horizon=H*.48;const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,"#07152d");sky.addColorStop(1,"#11112b");ctx.fillStyle=sky;ctx.fillRect(18,18,W-36,H-36);
-for(let i=0;i<46;i++){const seed=i*73.17;const x=((seed*17+t*(35+(i%5)*18))%(W-50))+25;const y=((seed*29+t*(85+(i%7)*23))%(H*.62))+20;ctx.globalAlpha=.25+((i%4)*.15);ctx.fillStyle=i%5===0?accent:"#d9f5ff";ctx.fillRect(x,y,1.5+(i%3),1.5+(i%3));}
-ctx.globalAlpha=.95;ctx.strokeStyle=accent;ctx.lineWidth=4;ctx.shadowColor=accent;ctx.shadowBlur=18;ctx.beginPath();ctx.moveTo(12,12);ctx.lineTo(W-12,12);ctx.lineTo(W-35,horizon+80);ctx.lineTo(W-80,H-110);ctx.lineTo(80,H-110);ctx.lineTo(35,horizon+80);ctx.closePath();ctx.stroke();ctx.shadowBlur=0;
-ctx.strokeStyle="#9db7d8";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(W/2,22);ctx.lineTo(W/2,horizon-8);ctx.moveTo(36,horizon);ctx.lineTo(W-36,horizon);ctx.stroke();
-ctx.fillStyle="#07101f";ctx.fillRect(0,H-178,W,178);ctx.fillStyle="#17243d";ctx.beginPath();ctx.moveTo(0,H-178);ctx.lineTo(115,H-126);ctx.lineTo(W-115,H-126);ctx.lineTo(W,H-178);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();ctx.strokeStyle="#425879";ctx.lineWidth=3;ctx.stroke();
-ctx.fillStyle="#0b1325";ctx.fillRect(W-144,H-238,88,150);ctx.strokeStyle=accent;ctx.lineWidth=3;ctx.strokeRect(W-144,H-238,88,150);ctx.fillStyle="#243653";ctx.fillRect(W-132,H-226,64,126);ctx.fillStyle="#9ffaff";ctx.font="bold 12px sans-serif";ctx.textAlign="center";ctx.fillText("THRUST",W-100,H-204);
-// Throttle handle moves forward under a futuristic gloved hand.
-const push=Math.min(1,Math.max(0,(t-.28)/.72));const leverX=W-100,leverY=H-154-push*48;
-ctx.strokeStyle="#7185a8";ctx.lineWidth=12;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(leverX, H-126);ctx.lineTo(leverX,leverY+18);ctx.stroke();ctx.fillStyle="#ffb45c";ctx.shadowColor="#ff9a44";ctx.shadowBlur=15;ctx.beginPath();ctx.roundRect(leverX-15,leverY-9,30,27,9);ctx.fill();ctx.shadowBlur=0;
-// glove silhouette, cuff and fingers wrapped around the throttle
-ctx.save();ctx.translate(leverX-9,leverY+5);ctx.rotate(-.22);ctx.fillStyle="#c7d5e8";ctx.strokeStyle="#f5fbff";ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-36,-8,45,46,15);ctx.fill();ctx.stroke();ctx.fillStyle="#8ca2c4";ctx.beginPath();ctx.roundRect(-45,14,22,25,7);ctx.fill();for(let j=0;j<3;j++){ctx.fillStyle="#e8f0fb";ctx.beginPath();ctx.roundRect(-31+j*10,-17,13,27,6);ctx.fill();ctx.stroke();}ctx.fillStyle="#536b91";ctx.fillRect(-43,28,30,12);ctx.restore();
-ctx.globalAlpha=1;ctx.textAlign="center";ctx.fillStyle="#fff";ctx.font="900 24px sans-serif";ctx.shadowColor=accent;ctx.shadowBlur=18;ctx.fillText(["OVERDRIVE","FASE ATIVADA","PULSO EMP"][ship],W/2,62);ctx.shadowBlur=0;ctx.fillStyle="#b9c8e6";ctx.font="bold 11px sans-serif";ctx.fillText("PILOTO AUTOMÁTICO · IMPULSO ESPECIAL",W/2,84);
-const barW=180;ctx.fillStyle="#26344f";ctx.fillRect(W/2-barW/2,H-54,barW,5);ctx.fillStyle=accent;ctx.fillRect(W/2-barW/2,H-54,barW*p,5);ctx.fillStyle="#dceaff";ctx.font="10px sans-serif";ctx.fillText("SISTEMA ATIVADO",W/2,H-34);ctx.restore();}
+function drawSpecialCinematic(){
+ if(specialCinematic<=0)return;
+ const t=3-specialCinematic,p=Math.min(1,t/3),fade=Math.min(1,t/.18,specialCinematic/.24),accent=palettes[ship][0];
+ ctx.save();ctx.globalAlpha=fade;
+ // Cinematic wipe: the cockpit appears to assemble in depth, like a hand-built mecha cockpit.
+ ctx.fillStyle="#02040d";ctx.fillRect(0,0,W,H);
+ const ease=Math.min(1,Math.max(0,t/.42)),depth=1-Math.pow(1-ease,3);
+ const cx=W/2,top=H*.075,base=H*.79;
+ function poly(points,fill,stroke=null,lw=1){ctx.beginPath();points.forEach((v,i)=>i?ctx.lineTo(v[0],v[1]):ctx.moveTo(v[0],v[1]));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();}}
+ function extrude(points,dx,dy,layers,front,side,stroke){
+  // True sprite-stacking illusion: many individually shaded silhouettes create visible thickness.
+  for(let z=layers;z>=1;z--){const k=z/layers;ctx.globalAlpha=fade*(.24+.48*(1-k));const shifted=points.map(([x,y])=>[x+dx*k,y+dy*k]);poly(shifted,side);}
+  ctx.globalAlpha=fade;poly(points,front,stroke,2);
+ }
+ // Deep armored canopy: outer shell, bevels and nested glass create a tunnel rather than a flat frame.
+ const shell=[[10,top+35],[cx-48,top],[cx+48,top],[W-10,top+35],[W-34,H*.61],[W-72,base],[72,base],[34,H*.61]];
+ extrude(shell,0,20,22,"#182b48","#091323","#7295bf");
+ const rim=[[27,top+43],[cx-39,top+17],[cx+39,top+17],[W-27,top+43],[W-49,H*.59],[W-85,base-19],[85,base-19],[49,H*.59]];
+ extrude(rim,0,12,16,"#243e62","#101e35",accent);
+ const glass=[[49,top+58],[cx-29,top+35],[cx+29,top+35],[W-49,top+58],[W-68,H*.55],[W-101,H*.69],[101,H*.69],[68,H*.55]];
+ const sky=ctx.createLinearGradient(0,top,0,H*.7);sky.addColorStop(0,"#102f55");sky.addColorStop(.5,"#07172e");sky.addColorStop(1,"#160e30");poly(glass,sky,"#8cecff",2);
+ // Layered distant planet, orbital rings and a fast-moving starfield.
+ ctx.save();ctx.beginPath();ctx.moveTo(...glass[0]);glass.slice(1).forEach(v=>ctx.lineTo(...v));ctx.closePath();ctx.clip();
+ const planetX=cx+(ship-1)*W*.12,planetY=H*.34,planetR=H*.105;
+ const pg=ctx.createRadialGradient(planetX-planetR*.35,planetY-planetR*.45,2,planetX,planetY,planetR);pg.addColorStop(0,"#e8faff");pg.addColorStop(.18,accent);pg.addColorStop(.62,"#304a81");pg.addColorStop(1,"#090d24");
+ ctx.fillStyle=pg;ctx.beginPath();ctx.arc(planetX,planetY,planetR,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle=accent;ctx.globalAlpha=fade*.55;ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(planetX,planetY,planetR*1.65,planetR*.42,-.2,0,Math.PI*2);ctx.stroke();
+ for(let i=0;i<90;i++){const seed=i*91.73;const x=((seed*13+t*(70+(i%6)*38))%(W+80))-40;const y=((seed*31+t*(120+(i%5)*55))%(H*.68));const len=2+Math.min(30,t*10)*(i%4===0?1:.18);ctx.globalAlpha=fade*(.25+(i%5)*.12);ctx.strokeStyle=i%7===0?accent:"#e4f5ff";ctx.lineWidth=i%9===0?2:1;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-len*.35,y+len);ctx.stroke();}
+ // Perspective guide rails converge toward the vanishing point.
+ ctx.globalAlpha=fade*.5;ctx.strokeStyle=accent;ctx.lineWidth=1.5;for(let i=0;i<9;i++){const x=i*W/8;ctx.beginPath();ctx.moveTo(cx+(x-cx)*.08,H*.31);ctx.lineTo(x,H*.72);ctx.stroke();}
+ ctx.restore();
+ // Canopy braces, exposed hydraulic pistons and luminous mechanical fasteners.
+ for(const side of [-1,1]){
+  const sx=side<0?34:W-34,ex=side<0?W*.19:W*.81;
+  ctx.strokeStyle="#b5d8ef";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(sx,H*.19);ctx.lineTo(ex,H*.67);ctx.stroke();
+  ctx.strokeStyle=accent;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(sx+side*7,H*.2);ctx.lineTo(ex+side*4,H*.65);ctx.stroke();
+  for(let j=0;j<4;j++){const y=H*(.22+j*.105);ctx.fillStyle="#d9f6ff";ctx.shadowColor=accent;ctx.shadowBlur=12;ctx.beginPath();ctx.arc(side<0?42+j*4:W-42-j*4,y,3,0,Math.PI*2);ctx.fill();}
+ }
+ ctx.shadowBlur=0;
+ // Heavy lower cockpit dashboard, layered like an anime mecha control deck.
+ const dash=[[0,H*.72],[W*.18,H*.67],[W*.34,H*.71],[W*.66,H*.71],[W*.82,H*.67],[W,H*.72],[W,H],[0,H]];
+ extrude(dash,0,18,20,"#1c2d49","#080e1d","#536e99");
+ const consolePoly=[[W*.08,H*.77],[W*.31,H*.72],[W*.69,H*.72],[W*.92,H*.77],[W*.84,H*.94],[W*.16,H*.94]];
+ extrude(consolePoly,0,9,10,"#263e60","#101b31",accent);
+ // Instrument clusters and animated telemetry.
+ for(let side=0;side<2;side++){
+  const x=side===0?W*.2:W*.8;
+  ctx.fillStyle="#071326";ctx.strokeStyle=accent;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(x-W*.095,H*.775,W*.19,H*.12,8);ctx.fill();ctx.stroke();
+  ctx.strokeStyle="#5e8fb8";ctx.lineWidth=1;for(let j=0;j<4;j++){ctx.beginPath();ctx.moveTo(x-W*.07+j*W*.035,H*.86);ctx.lineTo(x-W*.07+j*W*.035,H*.80+(j%2)*7);ctx.stroke();}
+  ctx.fillStyle=accent;ctx.font="bold 9px monospace";ctx.textAlign="center";ctx.fillText(side===0?"REACTOR":"GYRO",x,H*.795);
+ }
+ // Center holographic reticle and targeting brackets.
+ ctx.strokeStyle="#d9fbff";ctx.lineWidth=1.5;ctx.globalAlpha=fade*.8;ctx.beginPath();ctx.arc(cx,H*.43,16+Math.sin(t*9)*3,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(cx-34,H*.43);ctx.lineTo(cx-20,H*.43);ctx.moveTo(cx+20,H*.43);ctx.lineTo(cx+34,H*.43);ctx.moveTo(cx,H*.43-34);ctx.lineTo(cx,H*.43-20);ctx.moveTo(cx,H*.43+20);ctx.lineTo(cx,H*.43+34);ctx.stroke();
+ // A massive throttle column advances toward the camera in 3D stacked perspective.
+ const push=Math.min(1,Math.max(0,(t-.22)/.62)),leverX=cx+W*.285,leverBase=H*.83,leverY=leverBase-push*H*.115;
+ const column=[[leverX-13,leverBase],[leverX+13,leverBase],[leverX+9,leverY+18],[leverX-9,leverY+18]];
+ extrude(column,7,7,16,"#8ba9c9","#344c6c","#d8f4ff");
+ const grip=[[leverX-23,leverY+12],[leverX-19,leverY-10],[leverX-9,leverY-20],[leverX+12,leverY-20],[leverX+23,leverY-8],[leverX+20,leverY+15],[leverX+8,leverY+25],[leverX-13,leverY+23]];
+ extrude(grip,5,7,18,accent,"#163c5b","#e8ffff");
+ ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(leverX-12,leverY-8);ctx.lineTo(leverX+12,leverY-8);ctx.stroke();
+ // Mechanical pilot glove: stacked palm, cuff, articulated fingers and armor plates.
+ const handX=leverX-30-push*8,handY=leverY+12;
+ ctx.save();ctx.translate(handX,handY);ctx.rotate(-.16-push*.2);
+ const palm=[[-34,-12],[-20,-28],[10,-27],[26,-10],[24,22],[8,39],[-25,34],[-40,13]];
+ extrude(palm,7,9,18,"#dce9f8","#536d91","#ffffff");
+ // Wrist cuff and layered gauntlet plating.
+ extrude([[-43,18],[-26,30],[9,34],[18,55],[-27,52],[-49,37]],5,7,14,"#617da5","#243c60","#b8d8f4");
+ for(let j=0;j<4;j++){
+  const fx=-24+j*12,fy=-28+(j===3?7:0);
+  const finger=[[fx,fy],[fx+8,fy-9],[fx+17,fy-4],[fx+18,fy+18],[fx+12,fy+25],[fx+3,fy+20]];
+  extrude(finger,3,4,10,j%2?"#edf5ff":"#a9c3e1","#526d94","#ffffff");
+  ctx.strokeStyle="#516b8f";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(fx+5,fy+9);ctx.lineTo(fx+14,fy+11);ctx.stroke();
+ }
+ // Thumb curls around the throttle grip.
+ extrude([[12,-8],[28,-4],[39,9],[34,23],[22,20],[13,10]],4,5,12,"#d4e3f4","#607da4","#fff");
+ ctx.fillStyle=accent;ctx.shadowColor=accent;ctx.shadowBlur=12;ctx.fillRect(-26,37,29,4);ctx.restore();
+ // Dramatic speed streaks radiate from the windshield as the power engages.
+ ctx.globalAlpha=fade*Math.min(1,t*2);ctx.strokeStyle=accent;ctx.lineWidth=2;for(let i=0;i<18;i++){const a=i*Math.PI*2/18;const r1=H*.18,r2=H*(.24+push*.23);ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r1,H*.39+Math.sin(a)*r1);ctx.lineTo(cx+Math.cos(a)*r2,H*.39+Math.sin(a)*r2);ctx.stroke();}
+ ctx.globalAlpha=fade;ctx.textAlign="center";ctx.fillStyle="#fff";ctx.font="900 22px sans-serif";ctx.shadowColor=accent;ctx.shadowBlur=20;ctx.fillText(["OVERDRIVE","PHASE SHIFT","EMP BURST"][ship],cx,H*.115);ctx.shadowBlur=0;
+ ctx.fillStyle="#b9d8ef";ctx.font="bold 9px monospace";ctx.fillText("NEURAL LINK  //  PILOT SYSTEM ONLINE",cx,H*.145);
+ // Anime-style warning chevrons and activation bar.
+ ctx.fillStyle=accent;ctx.font="bold 10px monospace";ctx.fillText(">> DRIVE LIMITER RELEASED <<",cx,H*.64);
+ ctx.fillStyle="#263a59";ctx.fillRect(cx-75,H*.965,150,4);ctx.fillStyle=accent;ctx.fillRect(cx-75,H*.965,150*p,4);
+ ctx.fillStyle="#e8f7ff";ctx.font="bold 9px monospace";ctx.fillText("SYSTEM OVERRIDE  ·  03 SEC",cx,H*.948);
+ ctx.restore();
+}
 function draw(){ctx.clearRect(0,0,W,H);ctx.fillStyle="#080c1d";ctx.fillRect(0,0,W,H);ctx.strokeStyle="#17213e";ctx.lineWidth=1;for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
  obstacles.forEach(o=>{ctx.shadowBlur=13;ctx.shadowColor=o.type==="mine"?"#ff4e9b":"#9ba8cc";drawStack(o.type==="mine"?mine:rock,o.x+o.w/2,o.y+o.h/2,o.w,o.spin?o.angle:0);});ctx.shadowBlur=0;
  pickups.forEach(p=>{ctx.save();ctx.translate(p.x,p.y);if(p.type==="coin"){ctx.rotate(Math.sin(p.phase)*.12);ctx.shadowBlur=20;ctx.shadowColor="#ffd45a";ctx.fillStyle="#ffd45a";ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#fff5bd";ctx.lineWidth=3;ctx.stroke();ctx.fillStyle="#80500b";ctx.font="bold 17px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("$",0,1);}else{const color=p.type==="shield"?"#50f6ed":"#b8a0ff";ctx.strokeStyle=color;ctx.fillStyle=color+"22";ctx.lineWidth=4;ctx.shadowBlur=15;ctx.shadowColor=color;ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle="#fff";ctx.font="bold 13px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(p.type==="shield"?"S":"L",0,1);}ctx.restore();});

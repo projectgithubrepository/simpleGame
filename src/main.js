@@ -8,43 +8,70 @@ let coins=Math.max(0,Number(localStorage.getItem("neon-dodge-coins"))||0),best=N
 const player={x:W/2-18,y:H-92,w:36,h:42,speed:330,tilt:0,shield:false,thrustDir:0,thrustPulse:0};
 let obstacles=[],pickups=[],particles=[],running=false,elapsed=0,spawn=0,coinTimer=.8,powerTimer=5,slow=0,last=0,pointer=0,sound=false,audio=null,specialCooldown=0,specialTimer=0,specialCinematic=0,specialCinematicAge=0;
 const keys=new Set();bestEl.textContent=best;coinsEl.textContent=coins;
+// Pixel-art assets are authored on a 32x32 logical canvas and enlarged with
+// nearest-neighbour sampling. The layered extrusion gives each sprite a solid edge.
+function pixelCanvas(){const c=document.createElement("canvas");c.width=c.height=32;const g=c.getContext("2d");g.imageSmoothingEnabled=false;return [c,g];}
+function pxPoly(g,pts,color){g.fillStyle=color;g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fill();}
 function makeShip(index){
- const c=document.createElement("canvas");c.width=c.height=128;const g=c.getContext("2d"),[a,d,b]=palettes[index];
- const grad=g.createLinearGradient(0,5,0,122);grad.addColorStop(0,a);grad.addColorStop(.55,d);grad.addColorStop(1,"#11172d");
- g.shadowColor=a;g.shadowBlur=12;g.fillStyle=grad;g.beginPath();
- if(index===0){g.moveTo(64,4);g.lineTo(82,34);g.lineTo(123,79);g.lineTo(91,85);g.lineTo(82,119);g.lineTo(64,105);g.lineTo(46,119);g.lineTo(37,85);g.lineTo(5,79);g.lineTo(46,34);}
- if(index===1){g.moveTo(64,5);g.lineTo(94,29);g.lineTo(117,67);g.lineTo(103,111);g.lineTo(64,94);g.lineTo(25,111);g.lineTo(11,67);g.lineTo(34,29);}
- if(index===2){g.moveTo(64,3);g.lineTo(85,31);g.lineTo(126,54);g.lineTo(108,93);g.lineTo(87,88);g.lineTo(83,122);g.lineTo(45,122);g.lineTo(41,88);g.lineTo(20,93);g.lineTo(2,54);g.lineTo(43,31);}
- g.closePath();g.fill();g.shadowBlur=0;g.strokeStyle=a;g.lineWidth=3;g.stroke();
- // armor plates and cockpit
- g.fillStyle=b;g.beginPath();g.moveTo(17,70);g.lineTo(43,54);g.lineTo(48,81);g.lineTo(28,91);g.closePath();g.fill();
- g.beginPath();g.moveTo(111,70);g.lineTo(85,54);g.lineTo(80,81);g.lineTo(100,91);g.closePath();g.fill();
- g.fillStyle=d;g.beginPath();g.moveTo(64,13);g.lineTo(80,51);g.lineTo(64,96);g.lineTo(48,51);g.closePath();g.fill();
- g.fillStyle="#eaffff";g.beginPath();g.moveTo(64,19);g.lineTo(74,51);g.lineTo(64,68);g.lineTo(54,51);g.closePath();g.fill();
- g.fillStyle="#8ffcff";g.fillRect(61,28,6,26);
- g.strokeStyle="#eaffff";g.lineWidth=2;g.beginPath();g.moveTo(29,48);g.lineTo(43,62);g.moveTo(99,48);g.lineTo(85,62);g.stroke();
- g.fillStyle="#fff";g.fillRect(43,72,8,5);g.fillRect(77,72,8,5);
- g.fillStyle="#ffb45c";g.shadowColor="#ff793c";g.shadowBlur=15;g.fillRect(52,105,8,18);g.fillRect(68,105,8,18);g.shadowBlur=0;
- g.fillStyle=a;g.fillRect(9,81,22,4);g.fillRect(97,81,22,4);
+ const [c,g]=pixelCanvas(),[glow,mid,hot]=palettes[index];
+ const hull=index===0?[[16,1],[19,8],[28,16],[25,21],[22,20],[21,28],[16,25],[11,28],[10,20],[7,21],[4,16],[13,8]]:
+ index===1?[[16,1],[21,6],[26,14],[25,24],[16,28],[7,24],[6,14],[11,6]]:
+ [[16,1],[20,7],[30,13],[27,22],[22,21],[21,30],[11,30],[10,21],[5,22],[2,13],[12,7]];
+ // Deep shadow silhouette and hard-edged alloy facets.
+ pxPoly(g,hull,"#080e1d");pxPoly(g,hull.map(([x,y])=>[x,y-1]),mid);
+ pxPoly(g,[[16,3],[19,9],[25,15],[21,18],[18,16],[16,10],[14,16],[11,18],[7,15],[13,9]],glow);
+ pxPoly(g,[[16,5],[19,12],[16,22],[13,12]],"#d9f8ff");
+ pxPoly(g,[[15,7],[16,6],[17,12],[16,17],[15,12]],"#ffffff");
+ // Wing armor, panel cuts and colored edge pixels.
+ pxPoly(g,[[6,15],[12,12],[13,19],[9,22],[5,19]],hot);
+ pxPoly(g,[[26,15],[20,12],[19,19],[23,22],[27,19]],hot);
+ pxPoly(g,[[7,16],[11,14],[10,18],[7,19]],"#f5d7a4");
+ pxPoly(g,[[25,16],[21,14],[22,18],[25,19]],"#f5d7a4");
+ g.fillStyle="#101d32";g.fillRect(14,18,4,5);g.fillStyle="#8ffcff";g.fillRect(15,11,2,7);
+ g.fillStyle="#f4ffff";g.fillRect(12,20,2,1);g.fillRect(18,20,2,1);
+ // Engine housings and hot pixel exhaust.
+ g.fillStyle="#0a1324";g.fillRect(11,24,4,5);g.fillRect(17,24,4,5);
+ g.fillStyle="#ff7a36";g.fillRect(12,25,2,5);g.fillRect(18,25,2,5);
+ g.fillStyle="#fff2b0";g.fillRect(12,26,1,3);g.fillRect(18,26,1,3);
+ // Tiny rivets and edge highlights make the silhouette read at phone size.
+ g.fillStyle="#eaffff";g.fillRect(8,17,1,1);g.fillRect(23,17,1,1);g.fillRect(16,3,1,2);
+ g.fillStyle="#263d5d";g.fillRect(10,22,2,1);g.fillRect(20,22,2,1);
  return c;
 }
 function makeRock(){
- const c=document.createElement("canvas");c.width=c.height=128;const g=c.getContext("2d");
- const grad=g.createLinearGradient(12,8,112,120);grad.addColorStop(0,"#e0e7f6");grad.addColorStop(.35,"#697c9f");grad.addColorStop(1,"#202b45");
- g.fillStyle=grad;g.beginPath();g.moveTo(25,10);g.lineTo(77,6);g.lineTo(119,37);g.lineTo(108,91);g.lineTo(73,120);g.lineTo(18,103);g.lineTo(7,54);g.closePath();g.fill();g.strokeStyle="#d7e5ff";g.lineWidth=3;g.stroke();
- g.fillStyle="#cbd8ed";g.beginPath();g.moveTo(25,15);g.lineTo(74,11);g.lineTo(91,37);g.lineTo(50,52);g.lineTo(14,55);g.closePath();g.fill();
- g.fillStyle="#394967";g.beginPath();g.moveTo(50,52);g.lineTo(91,37);g.lineTo(108,91);g.lineTo(73,120);g.lineTo(51,89);g.closePath();g.fill();
- g.fillStyle="#17243b";g.fillRect(28,67,20,14);g.fillRect(73,62,21,17);g.fillStyle="#9cacc8";g.fillRect(18,89,20,5);g.fillRect(81,27,17,6);
+ const [c,g]=pixelCanvas();
+ const body=[[10,2],[22,3],[29,10],[27,22],[21,29],[8,27],[2,19],[4,8]];
+ pxPoly(g,body,"#080e1b");pxPoly(g,body.map(([x,y])=>[x,y-1]),"#536987");
+ pxPoly(g,[[6,8],[12,4],[21,5],[24,10],[15,14],[5,14]],"#c4d3e7");
+ pxPoly(g,[[5,15],[15,14],[19,20],[13,27],[6,23]],"#758ba9");
+ pxPoly(g,[[16,14],[25,10],[27,21],[20,27],[14,23]],"#273a58");
+ pxPoly(g,[[8,8],[12,6],[14,10],[10,12]],"#f2f6ff");
+ g.fillStyle="#18253d";g.fillRect(8,16,5,4);g.fillRect(18,15,5,5);
+ g.fillStyle="#9eafc9";g.fillRect(5,20,5,2);g.fillRect(21,8,4,2);
+ g.fillStyle="#dce8f7";g.fillRect(14,4,5,1);g.fillRect(25,13,2,3);
+ g.fillStyle="#111c30";g.fillRect(12,24,4,2);
  return c;
 }
-function makeMine(){const c=document.createElement("canvas");c.width=c.height=128;const g=c.getContext("2d");const gr=g.createRadialGradient(43,37,4,64,64,59);gr.addColorStop(0,"#fff1fb");gr.addColorStop(.28,"#ff83c0");gr.addColorStop(1,"#7b174f");g.fillStyle=gr;g.beginPath();g.arc(64,64,43,0,Math.PI*2);g.fill();g.strokeStyle="#ffd8ed";g.lineWidth=5;g.stroke();g.fillStyle="#5b1748";g.fillRect(57,5,14,118);g.fillRect(5,57,118,14);g.strokeStyle="#ffc0df";g.lineWidth=3;g.beginPath();g.arc(64,64,28,0,Math.PI*2);g.stroke();return c;}
+function makeMine(){
+ const [c,g]=pixelCanvas();
+ g.fillStyle="#160b22";g.fillRect(11,2,10,28);g.fillRect(2,11,28,10);
+ g.fillStyle="#9e286c";g.fillRect(13,1,6,30);g.fillRect(1,13,30,6);
+ g.fillStyle="#ff78ba";g.fillRect(14,3,4,26);g.fillRect(3,14,26,4);
+ g.fillStyle="#ffe3f2";g.fillRect(14,5,2,8);g.fillRect(5,14,8,2);
+ g.fillStyle="#40143d";g.fillRect(13,13,6,6);g.fillStyle="#fff1f8";g.fillRect(14,14,3,3);
+ g.fillStyle="#ffb3d8";g.fillRect(9,9,2,2);g.fillRect(21,9,2,2);g.fillRect(9,21,2,2);g.fillRect(21,21,2,2);
+ return c;
+}
+function stackSprite(img){
+ const c=document.createElement("canvas");c.width=c.height=96;const g=c.getContext("2d");g.imageSmoothingEnabled=false;
+ // Offset copies form a visible dark sidewall, not a blurred glow.
+ for(let z=10;z>=1;z--){g.globalAlpha=.18+z*.035;g.drawImage(img,18+z*.65,18-z*.35,60,60);}
+ g.globalAlpha=1;g.drawImage(img,18,18,60,60);return c;
+}
+const volumes=new WeakMap();
 const ships=names.map((_,i)=>makeShip(i)),rock=makeRock(),mine=makeMine();
-function stackSprite(img){const c=document.createElement("canvas");c.width=c.height=160;const g=c.getContext("2d");g.imageSmoothingEnabled=true;
- // Extrude the sprite into 18 individually offset depth layers, then draw its bright front face.
- for(let z=17;z>=0;z--){const depth=z/17;g.globalAlpha=.28+depth*.34;g.drawImage(img,16+depth*7,16-depth*5,128,128);}
- g.globalAlpha=1;g.shadowColor="#b8faff";g.shadowBlur=4;g.drawImage(img,16,16,128,128);g.shadowBlur=0;return c;}
-const volumes=new WeakMap();[...ships,rock,mine].forEach(img=>volumes.set(img,stackSprite(img)));
-function drawStack(img,x,y,size,angle=0){ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.drawImage(volumes.get(img)||img,-size*.62,-size*.62,size*1.24,size*1.24);ctx.restore();}
+[...ships,rock,mine].forEach(img=>volumes.set(img,stackSprite(img)));
+function drawStack(img,x,y,size,angle=0){ctx.save();ctx.translate(Math.round(x),Math.round(y));ctx.rotate(angle);ctx.imageSmoothingEnabled=false;ctx.drawImage(volumes.get(img)||img,-size*.62,-size*.62,size*1.24,size*1.24);ctx.imageSmoothingEnabled=true;ctx.restore();}
 function picker(){shipPicker.innerHTML=names.map((n,i)=>'<button type="button" data-ship="'+i+'" class="'+(ship===i?"selected":"")+'" aria-pressed="'+(ship===i)+'" '+(running?"disabled":"")+'>'+n+'</button>').join("");shipPicker.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{if(running)return;ship=Number(b.dataset.ship);localStorage.setItem("neon-dodge-ship",String(ship));picker();draw();
 updateSpecialButton();powerupStatus.textContent="Nave selecionada: "+names[ship]+". A escolha fica bloqueada ao iniciar.";}));shipPicker.classList.toggle("locked",running);}
 picker();

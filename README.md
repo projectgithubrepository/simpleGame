@@ -18,10 +18,11 @@
 <td align="center" width="25%"><img src="assets/rock.svg" width="88" alt="Destroço"><br><strong>DESTROÇO</strong><br>Evite a colisão</td>
 </tr></table>
 
-## As três naves
-- **Viper:** ciano e magenta.
-- **Phantom:** roxa e dourada.
-- **Titan:** laranja e vermelha.
+## As três naves e seus poderes
+- **Viper — Overdrive:** acelera a nave em 48% por 2,2 segundos.
+- **Phantom — Fase:** atravessa destroços sem sofrer colisão por 1,25 segundo.
+- **Titan — Pulso EMP:** reduz em 50% a velocidade dos destroços por 3,2 segundos.
+- **Equilíbrio:** os três poderes têm recarga comum de 18 segundos. Ative pelo botão **ESPECIAL** no celular ou pela tecla **Espaço** no computador.
 
 A escolha da nave fica disponível somente antes de iniciar. Depois que a partida começa, os botões ficam bloqueados; ao terminar, você pode escolher outra nave para a próxima rodada.
 
@@ -29,7 +30,9 @@ A escolha da nave fica disponível somente antes de iniciar. Depois que a partid
 - **Moeda dourada ($):** ao tocar, adiciona 5 moedas ao saldo salvo no navegador.
 - **Escudo azul (S):** ao coletar, aparece um anel azul ao redor da nave. A próxima colisão é anulada e consome o escudo. Sem escudo, a colisão encerra a partida.
 - **Lentidão roxa (L):** ao coletar, reduz em 50% a velocidade dos destroços durante 5 segundos.
+- **Poder especial:** botão ESPECIAL (celular) ou Espaço (computador), com recarga de 18 segundos.
 - **Propulsor lateral:** efeito visual enquanto você mantém um comando de direção; não é um item coletável.
+- **Toque no celular:** seleção de texto, menu de copiar e callout de toque desativados para não atrapalhar os controles.
 
 ## Projeto
 - HTML, CSS e JavaScript puro.

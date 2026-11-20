@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090b18">
+  <meta name="description" content="Neon Dodge — a fast, free arcade survival game.">
+  <title>Neon Dodge — Arcade Survival</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Neon Dodge home"><span class="brand-mark">N</span><span>NEON<span class="brand-accent">DODGE</span></span></a>
+      <div class="best">BEST <strong id="best-score">0</strong></div>
+    </header>
+
+    <section class="game-panel" aria-label="Neon Dodge game">
+      <div class="hud">
+        <div><span class="hud-label">SCORE</span><strong id="score">0</strong></div>
+        <div class="status" id="status">READY</div>
+        <button id="sound-button" class="icon-button" type="button" aria-label="Toggle sound" title="Toggle sound">♪</button>
+      </div>
+
+      <div class="stage-wrap">
+        <canvas id="game" width="480" height="640" aria-label="Game area. Move left and right to dodge obstacles." role="img"></canvas>
+        <div class="overlay" id="overlay">
+          <div class="overlay-card">
+            <p class="eyebrow" id="overlay-eyebrow">ARCADE SURVIVAL</p>
+            <h1 id="overlay-title">NEON<br><span>DODGE</span></h1>
+            <p id="overlay-copy">Dodge the incoming blocks. Survive as long as you can.</p>
+            <button id="play-button" class="primary-button" type="button">PLAY NOW <span>→</span></button>
+            <p class="hint">← → or A / D · Touch controls below</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-controls" aria-label="Touch controls">
+        <button id="left-button" type="button" aria-label="Move left">←</button>
+        <button id="right-button" type="button" aria-label="Move right">→</button>
+      </div>
+      <footer class="game-footer"><span>ONE MORE RUN?</span><span>BUILT FOR QUICK FUN</span></footer>
+    </section>
+    <p class="legal">Free to play · No download required</p>
+  </main>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

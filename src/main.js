@@ -90,7 +90,9 @@ function burst(x, y) {
   for (let i = 0; i < 18; i++) particles.push({ x, y, vx: (Math.random() - .5) * 260, vy: (Math.random() - .5) * 260, life: .5 });
 }
 function update(dt) {
-  elapsed += dt;\n  player.spin += dt * 1.35;\n  player.yaw += dt * 1.05;
+  elapsed += dt;
+  player.spin += dt * 1.35;
+  player.yaw += dt * 1.05;
   const direction = (keys.has("ArrowRight") || keys.has("d") || keys.has("D") ? 1 : 0) -
     (keys.has("ArrowLeft") || keys.has("a") || keys.has("A") ? 1 : 0) || pointerDirection;
   player.x = clamp(player.x + direction * player.speed * dt, 8, W - player.width - 8);
@@ -126,7 +128,8 @@ function drawStackedShip() {
   ctx.globalAlpha = 1;
   ctx.restore();
 }
-\nfunction draw() {
+
+function draw() {
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = "#080c1d"; ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = "#17213e"; ctx.lineWidth = 1;

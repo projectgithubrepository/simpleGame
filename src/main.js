@@ -142,7 +142,7 @@ function drawSpecialCinematic(){
    addVoxel(x+ix*s,y+iy*s,z+iz*s,color,s);
   }
  };
- const project=(x,y,z)=>{const k=1.34-z*.039;return [160+x*k+shake,302-(y-6.2)*k-z*2.05];};
+ const project=(x,y,z)=>{const k=13.4-z*.12;return [160+x*k+shake,302-(y-6.2)*15-z*5.2];};
  const shade=(hex,f)=>{const n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,((n>>16)&255)*f)),gg=Math.max(0,Math.min(255,((n>>8)&255)*f)),b=Math.max(0,Math.min(255,(n&255)*f));return "rgb("+r+","+gg+","+b+")";};
  const voxel=(v)=>{
   const s=v.s,{x,y,z}=v,p=[project(x,y,z),project(x+s,y,z),project(x+s,y+s,z),project(x,y+s,z),

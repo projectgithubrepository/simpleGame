@@ -90,7 +90,7 @@ updateSpecialButton();powerupStatus.textContent="Nave selecionada: "+names[ship]
 picker();
 function beep(f=440,d=.07){if(!sound)return;try{audio||=new(window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=f;g.gain.setValueAtTime(.035,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+d);}catch{}}
 function updateSpecialButton(){if(!specialButton)return;specialButton.disabled=!running||specialCooldown>0;specialButton.textContent=!running?"ESPECIAL":specialCooldown>0?"ESPECIAL · "+Math.ceil(specialCooldown)+"s":"ATIVAR ESPECIAL";if(specialHelp){const tips=["OVERDRIVE: acelera 48% por 2,2s.","FASE: atravessa destroços por 1,25s.","PULSO EMP: destroços 50% mais lentos por 3,2s."];specialHelp.textContent=tips[ship]+" Recarga: 18s.";}}
-function activateSpecial(){if(!running||specialCooldown>0)return;specialCooldown=18;specialTimer=0;specialCinematic=3;specialCinematicAge=0;if(ship===0){specialTimer=2.2;powerupStatus.textContent="VIPER — OVERDRIVE: velocidade +48% por 2,2 segundos.";}else if(ship===1){specialTimer=1.25;powerupStatus.textContent="PHANTOM — FASE: atravessa destroços por 1,25 segundo.";}else{slow=Math.max(slow,3.2);powerupStatus.textContent="TITAN — PULSO EMP: destroços 50% mais lentos por 3,2 segundos.";}updateSpecialButton();beep(980,.12);}
+function activateSpecial(){if(!running||specialCooldown>0)return;specialCooldown=18;specialTimer=0;specialCinematic=2.4;specialCinematicAge=0;if(ship===0){specialTimer=2.2;powerupStatus.textContent="VIPER — OVERDRIVE: velocidade +48% por 2,2 segundos.";}else if(ship===1){specialTimer=1.25;powerupStatus.textContent="PHANTOM — FASE: atravessa destroços por 1,25 segundo.";}else{slow=Math.max(slow,3.2);powerupStatus.textContent="TITAN — PULSO EMP: destroços 50% mais lentos por 3,2 segundos.";}updateSpecialButton();beep(980,.12);}
 function reset(){obstacles=[];pickups=[];particles=[];elapsed=0;spawn=0;coinTimer=.5;powerTimer=5;slow=0;specialCooldown=0;specialTimer=0;specialCinematic=0;specialCinematicAge=0;specialScene?.classList.remove("active");player.x=W/2-player.w/2;player.tilt=0;player.shield=false;player.thrustDir=0;player.thrustPulse=0;powerupStatus.textContent="MOEDA: +5 moedas. ESCUDO: absorve uma colisão. LENTIDÃO: destroços 50% mais lentos por 5s.";updateSpecialButton();}
 function start(){reset();running=true;picker();updateSpecialButton();last=performance.now();overlay.classList.add("hidden");statusEl.textContent="JOGANDO";requestAnimationFrame(loop);beep(620);}
 function finish(){running=false;specialCinematic=0;specialScene?.classList.remove("active");updateSpecialButton();const s=calculateScore(elapsed);if(s>best){best=s;localStorage.setItem("neon-dodge-best",String(best));bestEl.textContent=best;}statusEl.textContent="FIM";picker();eyebrowEl.textContent="FIM DE JOGO";titleEl.innerHTML="GAME<br><span>OVER</span>";copyEl.textContent="Pontos: "+s+". Recorde: "+best+". Moedas acumuladas: "+coins+".";playButton.innerHTML="JOGAR NOVAMENTE <span>→</span>";overlay.classList.remove("hidden");}
@@ -125,9 +125,10 @@ cockpitImage.decoding="async";
 cockpitImage.src="./assets/cockpit-frames.webp";
 function drawSpecialCinematic(){
  if(specialCinematic<=0)return;
- const t=2.6-specialCinematic,fade=Math.min(1,t/.18,specialCinematic/.2);
- const frameIndex=Math.min(5,Math.floor(Math.min(.999,t/3)*6));
- const sx=(frameIndex%3)*320,sy=Math.floor(frameIndex/3)*320;
+ const duration=2.4,t=duration-specialCinematic,fade=Math.min(1,t/.16,specialCinematic/.18);
+ const frameIndex=Math.min(5,Math.floor(Math.min(.999,t/duration)*6));
+ const frameW=cockpitImage.naturalWidth/3,frameH=cockpitImage.naturalHeight/2;
+ const sx=(frameIndex%3)*frameW,sy=Math.floor(frameIndex/3)*frameH;
  ctx.save();
  ctx.globalAlpha=fade;
  ctx.fillStyle="#03050a";ctx.fillRect(0,0,W,H);
@@ -135,11 +136,11 @@ function drawSpecialCinematic(){
   // Subtle offset slices give the photographic cockpit a shallow SpriteStack edge.
   for(let layer=4;layer>=1;layer--){
    ctx.globalAlpha=fade*.055;
-   ctx.drawImage(cockpitImage,sx,sy,320,320,layer*.8,80+layer*1.1,480,480);
+   ctx.drawImage(cockpitImage,sx,sy,frameW,frameH,layer*.8,80+layer*1.1,480,480);
   }
   ctx.globalAlpha=fade;
   ctx.imageSmoothingEnabled=true;
-  ctx.drawImage(cockpitImage,sx,sy,320,320,0,80,480,480);
+  ctx.drawImage(cockpitImage,sx,sy,frameW,frameH,0,80,480,480);
  }
  // Space traffic and star streaks stay clipped to the two canopy windows.
  const clipWindows=()=>{

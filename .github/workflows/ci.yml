@@ -23,6 +23,7 @@ jobs:
         with:
           node-version: 22
       - run: npm test
+      - run: node --check src/main.js
 
   deploy:
     if: github.event_name != 'pull_request'

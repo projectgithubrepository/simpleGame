@@ -140,28 +140,38 @@ function drawSpecialCinematic(){
  const grip=[[leverX-23,leverY+12],[leverX-19,leverY-10],[leverX-9,leverY-20],[leverX+12,leverY-20],[leverX+23,leverY-8],[leverX+20,leverY+15],[leverX+8,leverY+25],[leverX-13,leverY+23]];
  extrude(grip,5,7,18,accent,"#163c5b","#e8ffff");
  ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(leverX-12,leverY-8);ctx.lineTo(leverX+12,leverY-8);ctx.stroke();
- // Natural human pilot hand wearing a fitted flight glove, wrapped around the throttle.
- const handX=leverX-28-push*8,handY=leverY+10;
- ctx.save();ctx.translate(handX,handY);ctx.rotate(-.13-push*.12);
- // Wrist and glove cuff: soft fabric silhouette, not armor.
- const cuff=ctx.createLinearGradient(-42,22,-8,66);cuff.addColorStop(0,"#18243a");cuff.addColorStop(.5,"#344967");cuff.addColorStop(1,"#111b2d");
- ctx.beginPath();ctx.moveTo(-35,12);ctx.quadraticCurveTo(-43,22,-39,39);ctx.lineTo(-29,61);ctx.quadraticCurveTo(-24,68,-15,63);ctx.lineTo(9,51);ctx.lineTo(1,23);ctx.closePath();ctx.fillStyle=cuff;ctx.fill();
- ctx.strokeStyle="#7891b4";ctx.lineWidth=1.5;ctx.stroke();
- // Palm, drawn as one continuous, softly rounded human silhouette.
- const glove=ctx.createLinearGradient(-38,-25,25,38);glove.addColorStop(0,"#657d9f");glove.addColorStop(.35,"#293d5b");glove.addColorStop(.72,"#172942");glove.addColorStop(1,"#0b172a");
- ctx.beginPath();ctx.moveTo(-31,21);ctx.quadraticCurveTo(-40,7,-32,-7);ctx.lineTo(-20,-23);ctx.quadraticCurveTo(-15,-30,-9,-25);ctx.quadraticCurveTo(-5,-22,-9,-13);ctx.lineTo(-13,-3);ctx.quadraticCurveTo(-9,-12,-3,-23);ctx.quadraticCurveTo(2,-31,8,-25);ctx.quadraticCurveTo(12,-21,7,-12);ctx.lineTo(2,-1);ctx.quadraticCurveTo(9,-15,15,-18);ctx.quadraticCurveTo(23,-21,25,-13);ctx.quadraticCurveTo(27,-8,21,1);ctx.lineTo(15,11);ctx.quadraticCurveTo(23,1,29,4);ctx.quadraticCurveTo(36,8,30,17);ctx.lineTo(15,37);ctx.quadraticCurveTo(5,48,-12,42);ctx.lineTo(-26,34);ctx.quadraticCurveTo(-34,30,-31,21);ctx.closePath();ctx.fillStyle=glove;ctx.fill();
- ctx.strokeStyle="#91a8c5";ctx.lineWidth=1.7;ctx.stroke();
- // Curved seams and subtle padded knuckle contours make the glove read as fabric.
- ctx.strokeStyle="rgba(202,224,247,.52)";ctx.lineWidth=1.25;ctx.lineCap="round";
- ctx.beginPath();ctx.moveTo(-17,-17);ctx.quadraticCurveTo(-11,-7,-16,2);ctx.moveTo(-1,-17);ctx.quadraticCurveTo(5,-5,-1,5);ctx.moveTo(14,-10);ctx.quadraticCurveTo(18,0,10,9);ctx.moveTo(-27,13);ctx.quadraticCurveTo(-12,23,4,19);ctx.stroke();
- ctx.strokeStyle="rgba(5,12,25,.7)";ctx.lineWidth=2;
- ctx.beginPath();ctx.moveTo(-23,27);ctx.quadraticCurveTo(-7,37,9,29);ctx.stroke();
- // Thumb crosses the front of the grip in a natural curled pose.
- ctx.beginPath();ctx.moveTo(13,17);ctx.quadraticCurveTo(24,10,32,17);ctx.quadraticCurveTo(39,24,32,32);ctx.quadraticCurveTo(26,38,17,31);ctx.lineTo(5,23);ctx.closePath();
- const thumb=ctx.createLinearGradient(12,12,34,34);thumb.addColorStop(0,"#7189a9");thumb.addColorStop(.55,"#344b6c");thumb.addColorStop(1,"#172942");ctx.fillStyle=thumb;ctx.fill();ctx.strokeStyle="#9ab1cc";ctx.lineWidth=1.4;ctx.stroke();
- ctx.strokeStyle="rgba(220,236,250,.5)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,19);ctx.quadraticCurveTo(29,20,31,27);ctx.stroke();
- // Small fabric highlight; keep the hand grounded in the cockpit lighting.
- ctx.globalAlpha=fade*.7;ctx.fillStyle=accent;ctx.shadowColor=accent;ctx.shadowBlur=9;ctx.fillRect(-25,40,17,2);ctx.shadowBlur=0;
+ // Pixel-art pilot glove: a sculpted low-resolution sprite, extruded into stacked depth layers.
+ // The hand remains human and naturally wrapped around the grip; no robotic fingers or armor.
+ const gloveCanvas=document.createElement("canvas");gloveCanvas.width=gloveCanvas.height=72;
+ const gg=gloveCanvas.getContext("2d");gg.imageSmoothingEnabled=false;
+ // Wrist cuff and palm silhouette.
+ gg.fillStyle="#101b2c";gg.fillRect(10,39,23,27);gg.fillStyle="#344b68";gg.fillRect(12,38,19,25);
+ gg.fillStyle="#7187a4";gg.fillRect(13,39,16,3);gg.fillStyle="#1b2d46";gg.fillRect(14,45,14,15);
+ // Palm: rounded stepped silhouette with shaded planes.
+ gg.fillStyle="#0b1423";gg.fillRect(12,21,35,27);gg.fillRect(17,17,27,34);
+ gg.fillStyle="#243a57";gg.fillRect(14,22,31,25);gg.fillRect(18,18,24,32);
+ gg.fillStyle="#526b8b";gg.fillRect(19,19,18,4);gg.fillRect(15,24,5,15);
+ gg.fillStyle="#172941";gg.fillRect(38,27,8,15);gg.fillRect(23,45,17,4);
+ // Four gloved fingers curl over the forward side of the throttle.
+ const finger=(x,y,w,shade)=>{gg.fillStyle="#0a1321";gg.fillRect(x-1,y-1,w+2,14);gg.fillStyle=shade;gg.fillRect(x,y,w,11);gg.fillStyle="#8ba0bb";gg.fillRect(x,y,w,2);gg.fillStyle="#1a2c44";gg.fillRect(x,y+8,w,3);gg.fillStyle="#9aacc2";gg.fillRect(x+1,y+5,w-2,1);};
+ finger(18,8,7,"#526b89");finger(27,5,7,"#657d9b");finger(36,8,7,"#536b89");finger(44,14,6,"#3b5372");
+ // Thumb crosses the grip in front, with a natural curved stepped shape.
+ gg.fillStyle="#0a1321";gg.fillRect(37,31,19,11);gg.fillRect(42,27,13,11);
+ gg.fillStyle="#405a7a";gg.fillRect(38,31,16,8);gg.fillRect(43,28,10,8);
+ gg.fillStyle="#91a7c1";gg.fillRect(43,28,8,2);gg.fillStyle="#1a2b43";gg.fillRect(39,37,12,2);
+ // Fabric seams, knuckle pads and restrained highlights.
+ gg.fillStyle="#a9bdd3";gg.fillRect(20,13,4,1);gg.fillRect(29,11,4,1);gg.fillRect(38,14,4,1);
+ gg.fillStyle="#101e31";gg.fillRect(21,24,2,12);gg.fillRect(30,23,2,13);gg.fillRect(39,24,2,8);
+ gg.fillStyle="#91a8c2";gg.fillRect(17,43,13,1);gg.fillRect(16,47,8,1);
+ // Build thickness from many offset copies, then render a crisp nearest-neighbour face.
+ const gloveX=handX-17,gloveY=handY-24,gloveScale=1.12;
+ ctx.save();ctx.translate(gloveX,gloveY);ctx.rotate(-.12-push*.08);
+ for(let z=13;z>=1;z--){ctx.globalAlpha=fade*(.12+.035*(14-z));ctx.drawImage(gloveCanvas,z*.55,-z*.38,72*gloveScale,72*gloveScale);}
+ ctx.globalAlpha=fade;ctx.imageSmoothingEnabled=false;ctx.shadowColor="#000";ctx.shadowBlur=5;
+ ctx.drawImage(gloveCanvas,0,0,72*gloveScale,72*gloveScale);ctx.shadowBlur=0;ctx.imageSmoothingEnabled=true;
+ // Small stitched cuff tab catches the cockpit light.
+ ctx.fillStyle=accent;ctx.globalAlpha=fade*.8;ctx.fillRect(12*gloveScale,49*gloveScale,11*gloveScale,1.5);
+ ctx.restore();
  ctx.restore();
  // Dramatic speed streaks radiate from the windshield as the power engages.
  ctx.globalAlpha=fade*Math.min(1,t*2);ctx.strokeStyle=accent;ctx.lineWidth=2;for(let i=0;i<18;i++){const a=i*Math.PI*2/18;const r1=H*.18,r2=H*(.24+push*.23);ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r1,H*.39+Math.sin(a)*r1);ctx.lineTo(cx+Math.cos(a)*r2,H*.39+Math.sin(a)*r2);ctx.stroke();}

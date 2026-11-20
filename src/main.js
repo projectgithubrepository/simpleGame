@@ -135,6 +135,7 @@ function drawSpecialCinematic(){
  ctx.strokeStyle="#d9fbff";ctx.lineWidth=1.5;ctx.globalAlpha=fade*.8;ctx.beginPath();ctx.arc(cx,H*.43,16+Math.sin(t*9)*3,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(cx-34,H*.43);ctx.lineTo(cx-20,H*.43);ctx.moveTo(cx+20,H*.43);ctx.lineTo(cx+34,H*.43);ctx.moveTo(cx,H*.43-34);ctx.lineTo(cx,H*.43-20);ctx.moveTo(cx,H*.43+20);ctx.lineTo(cx,H*.43+34);ctx.stroke();
  // A massive throttle column advances toward the camera in 3D stacked perspective.
  const push=Math.min(1,Math.max(0,(t-.22)/.62)),leverX=cx+W*.285,leverBase=H*.83,leverY=leverBase-push*H*.115;
+ const handX=leverX+5,handY=leverY+15;
  const column=[[leverX-13,leverBase],[leverX+13,leverBase],[leverX+9,leverY+18],[leverX-9,leverY+18]];
  extrude(column,7,7,16,"#8ba9c9","#344c6c","#d8f4ff");
  const grip=[[leverX-23,leverY+12],[leverX-19,leverY-10],[leverX-9,leverY-20],[leverX+12,leverY-20],[leverX+23,leverY-8],[leverX+20,leverY+15],[leverX+8,leverY+25],[leverX-13,leverY+23]];

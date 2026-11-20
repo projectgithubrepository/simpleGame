@@ -63,3 +63,8 @@ button,canvas{touch-action:manipulation}
 .scene-progress{position:absolute;z-index:6;bottom:2%;left:25%;width:50%;height:4px;background:#29415e}
 .scene-progress:after{content:"";display:block;height:100%;background:#50f6ed;box-shadow:0 0 12px #50f6ed;animation:scene-progress 3s linear forwards}
 @keyframes scene-in{from{opacity:0}to{opacity:1}}@keyframes frame-build{from{transform:translateZ(-150px) scale(.65);opacity:0}to{transform:translateZ(35px) scale(1);opacity:1}}@keyframes star-rush{to{background-position:0 180px,19px 240px}}@keyframes planet-pulse{50%{transform:scale(1.07);filter:brightness(1.25)}}@keyframes scene-progress{to{width:0}}
+
+/* Pixel-art presentation: preserve hard sprite edges on high-density mobile screens. */
+#game{image-rendering:pixelated;image-rendering:crisp-edges}
+.stage-wrap{border-color:#405579;box-shadow:inset 0 0 0 1px #8bb7d522,0 12px 32px #0008}
+.game-panel{background:linear-gradient(155deg,#18213b 0%,#0c1225 58%,#090e1d 100%);border-color:#354568}

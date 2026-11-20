@@ -235,7 +235,7 @@ function drawSpecialCinematic(){
  // Activation lighting sweeps across the real 3D cockpit surfaces.
  if(power>0){g.save();g.globalAlpha=fade*power*.22;const pulse=g.createRadialGradient(160,300,4,160,300,210);pulse.addColorStop(0,accent);pulse.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=pulse;g.fillRect(0,70,rw,rh-70);g.restore();
   for(let i=0;i<24;i++){const x=(i*43+t*110)%rw,y=(i*67+t*150)%rh;rect(x,y,2+(i%3),2,"#e9ffff");}}
- ctx.save();ctx.globalAlpha=fade;ctx.imageSmoothingEnabled=false;ctx.drawImage(frame,0,0,W,H);ctx.imageSmoothingEnabled=true;ctx.restore();
+ ctx.save();ctx.globalAlpha=fade;ctx.imageSmoothingEnabled=false;ctx.drawImage(frame,0,65,rw,390,0,0,W,H);ctx.imageSmoothingEnabled=true;ctx.restore();ctx.save();ctx.globalAlpha=fade;ctx.textAlign="center";ctx.fillStyle="#eaf6ff";ctx.font="bold 12px monospace";ctx.fillText(["OVERDRIVE","PHASE SHIFT","EMP BURST"][ship],W/2,25);ctx.fillStyle=accent;ctx.fillRect(W*.2,H-13,W*.6,3);ctx.fillRect(W*.2,H-13,W*.6*ease(t/3),3);ctx.restore();
 }
 function draw(){ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;ctx.drawImage(backdrop,0,0,W,H);ctx.imageSmoothingEnabled=true;ctx.strokeStyle="#1b2945";ctx.globalAlpha=.28;ctx.lineWidth=1;for(let x=0;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}ctx.globalAlpha=1;
  obstacles.forEach(o=>{ctx.shadowBlur=13;ctx.shadowColor=o.type==="mine"?"#ff4e9b":"#9ba8cc";drawStack(o.type==="mine"?mine:rock,o.x+o.w/2,o.y+o.h/2,o.w,o.spin?o.angle:0);});ctx.shadowBlur=0;

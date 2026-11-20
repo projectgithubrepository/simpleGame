@@ -26,3 +26,11 @@
 .ship-select-panel{margin-bottom:10px}
 .ship-picker button:disabled{opacity:.5}
 @media(max-width:380px){.guide-items{gap:3px}.guide-items img{width:34px;height:34px}.guide-items span{font-size:7px}}
+
+/* Evita seleção de texto e callout/menu de cópia durante toques no jogo. */
+html,body,.game-panel,.game-panel *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+body{overscroll-behavior:none}
+button,canvas{touch-action:manipulation}
+.mobile-controls button,#special-button{touch-action:none;-webkit-user-select:none;user-select:none}
+#special-button{min-height:42px;padding:9px 12px;border:1px solid #50f6ed;border-radius:9px;background:#153449;color:#50f6ed;font-size:10px;font-weight:900;letter-spacing:.04em;cursor:pointer}
+#special-button:disabled{opacity:.48;cursor:not-allowed}

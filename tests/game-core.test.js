@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { clamp, intersects, nextSpawnInterval, calculateScore } from "../src/game-core.js";
+import { clamp, intersects, nextSpawnInterval, calculateScore, coinValue, powerupDuration, canUnlockSkin } from "../src/game-core.js";
 
 test("clamp keeps values inside boundaries", () => {
   assert.equal(clamp(5, 0, 10), 5);
@@ -19,4 +19,13 @@ test("spawn interval gets faster but has a lower limit", () => {
 test("score is elapsed seconds multiplied by ten, rounded down", () => {
   assert.equal(calculateScore(3.89), 38);
   assert.equal(calculateScore(-1), 0);
+});
+test("coins and powerups have consistent rewards and duration", () => {
+  assert.equal(coinValue(), 5);
+  assert.equal(powerupDuration(), 5);
+});
+test("skin unlock checks the saved coin balance", () => {
+  assert.equal(canUnlockSkin(49), false);
+  assert.equal(canUnlockSkin(50), true);
+  assert.equal(canUnlockSkin(100, 75), true);
 });

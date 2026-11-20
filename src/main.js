@@ -125,9 +125,9 @@ cockpitImage.decoding="async";
 cockpitImage.src="./assets/cockpit-frames.webp";
 function drawSpecialCinematic(){
  if(specialCinematic<=0)return;
- const t=3-specialCinematic,fade=Math.min(1,t/.18,specialCinematic/.2);
+ const t=2.6-specialCinematic,fade=Math.min(1,t/.18,specialCinematic/.2);
  const frameIndex=Math.min(5,Math.floor(Math.min(.999,t/3)*6));
- const sx=(frameIndex%3)*100,sy=Math.floor(frameIndex/3)*100;
+ const sx=(frameIndex%3)*320,sy=Math.floor(frameIndex/3)*320;
  ctx.save();
  ctx.globalAlpha=fade;
  ctx.fillStyle="#03050a";ctx.fillRect(0,0,W,H);
@@ -135,11 +135,11 @@ function drawSpecialCinematic(){
   // Subtle offset slices give the photographic cockpit a shallow SpriteStack edge.
   for(let layer=4;layer>=1;layer--){
    ctx.globalAlpha=fade*.055;
-   ctx.drawImage(cockpitImage,sx,sy,100,100,layer*.8,80+layer*1.1,480,480);
+   ctx.drawImage(cockpitImage,sx,sy,320,320,layer*.8,80+layer*1.1,480,480);
   }
   ctx.globalAlpha=fade;
   ctx.imageSmoothingEnabled=true;
-  ctx.drawImage(cockpitImage,sx,sy,100,100,0,80,480,480);
+  ctx.drawImage(cockpitImage,sx,sy,320,320,0,80,480,480);
  }
  // Space traffic and star streaks stay clipped to the two canopy windows.
  const clipWindows=()=>{

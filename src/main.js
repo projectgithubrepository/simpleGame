@@ -120,181 +120,76 @@ function update(dt){
 }
 function drawThruster(){if(!player.thrustDir)return;const movingRight=player.thrustDir>0,flame=13+Math.sin(player.thrustPulse)*7;ctx.save();ctx.translate(player.x+18,player.y+21);ctx.rotate(player.tilt);const edge=movingRight?-18:18,tip=edge+(movingRight?-flame:flame);ctx.shadowColor="#ff8a35";ctx.shadowBlur=24;const grad=ctx.createLinearGradient(edge,0,tip,0);grad.addColorStop(0,"#fffbd0");grad.addColorStop(.35,"#ffbd48");grad.addColorStop(1,"#ff3d35");ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(edge,-6);ctx.quadraticCurveTo((edge+tip)/2,-12,tip,0);ctx.quadraticCurveTo((edge+tip)/2,12,edge,6);ctx.closePath();ctx.fill();ctx.fillStyle="#fff";ctx.globalAlpha=.95;ctx.beginPath();ctx.moveTo(edge,-2);ctx.lineTo(tip*.82,0);ctx.lineTo(edge,2);ctx.closePath();ctx.fill();ctx.restore();}
 function drawShip(){ctx.save();ctx.translate(player.x+18,player.y+21);ctx.rotate(player.tilt);if(ship===1&&specialTimer>0){ctx.globalAlpha=.48;ctx.strokeStyle="#c5a6ff";ctx.lineWidth=3;ctx.shadowBlur=20;ctx.shadowColor="#c5a6ff";ctx.beginPath();ctx.arc(0,0,29,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}if(player.shield){ctx.strokeStyle="#50f6ed";ctx.lineWidth=3;ctx.shadowBlur=18;ctx.shadowColor="#50f6ed";ctx.beginPath();ctx.arc(0,0,33,0,Math.PI*2);ctx.stroke();ctx.fillStyle="#50f6ed22";ctx.fill();ctx.shadowBlur=0;}drawStack(ships[ship],0,0,57);ctx.restore();drawThruster();}
+const cockpitImage=new Image();
+cockpitImage.decoding="async";
+cockpitImage.src="./assets/cockpit-frames.webp";
 function drawSpecialCinematic(){
  if(specialCinematic<=0)return;
- const t=3-specialCinematic,fade=Math.min(1,t/.16,specialCinematic/.22);
- const accent=palettes[ship][0],mid=palettes[ship][1],hot=palettes[ship][2];
- const rw=480,rh=640,frame=document.createElement("canvas");frame.width=rw;frame.height=rh;
- const g=frame.getContext("2d");g.imageSmoothingEnabled=false;
- const clamp01=v=>Math.max(0,Math.min(1,v));
- const ease=v=>{v=clamp01(v);return v*v*(3-2*v);};
- const approach=ease((t-.18)/.82),grab=ease((t-.9)/.62),power=ease((t-1.65)/.72);
- const shake=power*(Math.sin(t*48)*1.15+Math.sin(t*27)*.65);
- const rect=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};
- const poly=(pts,c)=>{g.fillStyle=c;g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fill();};
- const profiles=[
-  {name:"VIPER // OVERDRIVE",w:10.5,wall:"#172c3b",armor:"#31566a",trim:"#50f6ed",seat:"#122c39",display:"cyan",style:0},
-  {name:"PHANTOM // PHASE SHIFT",w:11.5,wall:"#211d38",armor:"#453765",trim:"#c5a6ff",seat:"#211b39",display:"violet",style:1},
-  {name:"TITAN // EMP BURST",w:13,wall:"#30271f",armor:"#65503a",trim:"#ffb45c",seat:"#30271f",display:"amber",style:2}
- ];
- const p=profiles[ship],voxels=[];
- const addBox=(x,y,z,w,h,d,color,s=.42,skip)=>{
-  const nx=Math.max(1,Math.ceil(w/s)),ny=Math.max(1,Math.ceil(h/s)),nz=Math.max(1,Math.ceil(d/s));
-  for(let ix=0;ix<nx;ix++)for(let iy=0;iy<ny;iy++)for(let iz=0;iz<nz;iz++){
-   if(skip&&skip(ix,iy,iz,nx,ny,nz))continue;
-   voxels.push({x:x+ix*s,y:y+iy*s,z:z+iz*s,sx:Math.min(s,w-ix*s),sy:Math.min(s,h-iy*s),sz:Math.min(s,d-iz*s),color});
+ const t=3-specialCinematic,fade=Math.min(1,t/.18,specialCinematic/.2);
+ const frameIndex=Math.min(5,Math.floor(Math.min(.999,t/3)*6));
+ const sx=(frameIndex%3)*100,sy=Math.floor(frameIndex/3)*100;
+ ctx.save();
+ ctx.globalAlpha=fade;
+ ctx.fillStyle="#03050a";ctx.fillRect(0,0,W,H);
+ if(cockpitImage.complete&&cockpitImage.naturalWidth){
+  // Subtle offset slices give the photographic cockpit a shallow SpriteStack edge.
+  for(let layer=4;layer>=1;layer--){
+   ctx.globalAlpha=fade*.055;
+   ctx.drawImage(cockpitImage,sx,sy,100,100,layer*.8,80+layer*1.1,480,480);
   }
- };
- const project=(x,y,z)=>{
-  const depth=z+10,scale=270/depth;
-  return [240+x*scale+shake,354-(y-5.2)*scale];
- };
- const shade=(hex,f)=>{
-  const n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,((n>>16)&255)*f)),gg=Math.max(0,Math.min(255,((n>>8)&255)*f)),b=Math.max(0,Math.min(255,(n&255)*f));
-  return "rgb("+r+","+gg+","+b+")";
- };
- const face=(pts,color)=>poly(pts,color);
- const drawVoxel=v=>{
-  const {x,y,z,sx,sy,sz,color}=v;
-  const a=project(x,y,z),b=project(x+sx,y,z),c=project(x+sx,y+sy,z),d=project(x,y+sy,z);
-  const e=project(x,y,z+sz),f=project(x+sx,y,z+sz),h=project(x+sx,y+sy,z+sz),i=project(x,y+sy,z+sz);
-  face([a,b,c,d],shade(color,.55));
-  face([b,f,h,c],shade(color,.38));
-  face([d,c,h,i],shade(color,1.34));
-  face([a,d,i,project(x,y+sy,z+sz)],shade(color,.78));
- };
- const plate=(x,y,z,w,h,color)=>addBox(x,y,z,w,h,.42,color,.28);
- const screen=(x,y,z,w,h,kind,index)=>{
-  addBox(x-.22,y-.22,z,w+.44,h+.44,.52,p.armor,.28);
-  addBox(x,y,z+.5,w,h,.12,"#030a12",.22);
-  const base=kind==="radar"?"#20f0b2":kind==="violet"?"#c7a2ff":"#55dfff";
-  const grad=g.createLinearGradient(0,0,0,90);grad.addColorStop(0,kind==="radar"?"#103b37":"#142c43");grad.addColorStop(1,"#06101c");
-  // Screen glass is a continuous inset surface; fine vector traces sit on top of the voxel bezel.
-  const a=project(x,y,z+.66),b=project(x+w,y,z+.66),c=project(x+w,y+h,z+.66),d=project(x,y+h,z+.66);
-  poly([a,b,c,d],grad);
-  const sx=project(x+.12,y+.14,z+.7),ex=project(x+w-.12,y+h-.14,z+.7);
-  g.save();g.beginPath();g.moveTo(...a);g.lineTo(...b);g.lineTo(...c);g.lineTo(...d);g.closePath();g.clip();
-  g.strokeStyle=base;g.globalAlpha=.8;g.lineWidth=1.4;
-  for(let k=0;k<5;k++){g.beginPath();g.moveTo(sx[0],sx[1]+k*4);g.lineTo(ex[0],sx[1]+k*4);g.stroke();}
-  g.globalAlpha=.5;g.beginPath();g.arc((a[0]+b[0])/2,(a[1]+d[1])/2,Math.min(w,h)*4,0,Math.PI*2);g.stroke();
-  g.globalAlpha=1;g.fillStyle=base;for(let k=0;k<8;k++)g.fillRect(a[0]+5+k*5,a[1]+5+(k%3)*4,2,2);
-  g.restore();
-  addBox(x+.18,y+.12,z+.8,.45,.08,.08,hot,.12);
- };
- // Cockpit atmosphere: deep space through armored glass, with real light falloff.
- const bg=g.createLinearGradient(0,0,0,rh);bg.addColorStop(0,"#02040a");bg.addColorStop(.42,"#0a1725");bg.addColorStop(1,"#03060d");g.fillStyle=bg;g.fillRect(0,0,rw,rh);
- const outside=g.createRadialGradient(240,210,5,240,210,290);outside.addColorStop(0,ship===1?"rgba(111,74,180,.30)":ship===2?"rgba(180,105,42,.28)":"rgba(30,139,164,.28)");outside.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=outside;g.fillRect(0,0,rw,rh);
- // Distant stars and planet horizon visible only through the canopy opening.
- let seed=ship*913+271;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
- for(let k=0;k<105;k++){const x=rnd()*rw,y=rnd()*300;rect(x,y,rnd()>.9?2:1,rnd()>.9?2:1,rnd()>.5?"#8db8d5":"#425d7b");}
- g.save();g.globalAlpha=.32;g.fillStyle=ship===1?"#7053a0":ship===2?"#b06c38":"#236b83";g.beginPath();g.ellipse(240,232,150,52,0,0,Math.PI*2);g.fill();g.restore();
- // The pilot seat and floor connect the foreground to the dashboard: no detached props.
- addBox(-p.w*.58,-.3,1,p.w*1.16,.55,12,"#080e17",.38);
- addBox(-p.w*.48,.1,1.4,p.w*.96,.38,10,p.wall,.38);
- addBox(-4.2,.35,1.8,8.4,5.8,2.1,p.seat,.38);
- addBox(-3.65,1.0,1.25,7.3,4.8,.65,p.armor,.32);
- addBox(-3.1,1.5,.95,6.2,3.9,.28,"#111c2b",.25);
- for(let x=-3.3;x<=3.3;x+=.55)addBox(x,.15,1.2,.12,.2,1.2,p.trim,.12);
- // Side hulls rise from the floor and curve inward toward the canopy, framing the pilot.
- for(const side of [-1,1]){
-  addBox(side*(p.w*.48),.2,2,1.05,7.3,12,p.wall,.38);
-  addBox(side*(p.w*.43),.6,2.3,.34,6.4,10.8,p.armor,.3);
-  addBox(side*(p.w*.39),6.6,9,.72,.7,4.5,p.trim,.28);
-  addBox(side*(p.w*.49),7.35,12,.75,.6,3.2,"#0a111b",.28);
-  for(let k=0;k<7;k++)addBox(side*(p.w*.43),1.1+k*.78,3.1+k*.8,.42,.12,1.25,k%2?mid:p.trim,.16);
-  // Side console is physically seated on the side hull, with bevels and inset hardware.
-  addBox(side*(p.w*.34)-1.0,1.1,4.1,2.0,.8,6.2,p.wall,.32);
-  addBox(side*(p.w*.34)-.83,1.83,4.45,1.66,.18,5.55,p.armor,.24);
-  for(let k=0;k<5;k++){
-   addBox(side*(p.w*.34)-.66,2.02,4.8+k*.88,.32,.18,.34,k%2?hot:p.trim,.16);
-   addBox(side*(p.w*.34)-.1,2.02,4.8+k*.88,.22,.12,.22,"#d8e2e8",.11);
-  }
-  addBox(side*(p.w*.34)-.25,2.05,8.95,.55,.42,.55,"#0a111b",.18);
+  ctx.globalAlpha=fade;
+  ctx.imageSmoothingEnabled=true;
+  ctx.drawImage(cockpitImage,sx,sy,100,100,0,80,480,480);
  }
- // Canopy frame, thick seals and overhead ribs form one continuous cabin shell.
- addBox(-p.w*.53,7.45,12.8,p.w*1.06,.65,1.1,"#101b2a",.32);
- addBox(-p.w*.46,8.0,13.1,p.w*.92,.42,.65,p.armor,.28);
- for(let side of [-1,1])addBox(side*(p.w*.49),5.5,13.0,.72,3.0,.8,p.armor,.3);
- for(let k=0;k<5;k++)addBox(-p.w*.43+k*p.w*.215,7.85,13.2,.16,.42,.5,p.trim,.12);
- const glassA=project(-p.w*.43,4.5,13.55),glassB=project(p.w*.43,4.5,13.55),glassC=project(p.w*.43,7.7,13.55),glassD=project(-p.w*.43,7.7,13.55);
- const glass=g.createLinearGradient(0,130,0,330);glass.addColorStop(0,"rgba(30,76,106,.28)");glass.addColorStop(.55,"rgba(9,24,40,.12)");glass.addColorStop(1,"rgba(30,75,95,.34)");
- poly([glassA,glassB,glassC,glassD],glass);
- g.save();g.globalAlpha=.18;g.strokeStyle="#bcecff";g.lineWidth=3;g.beginPath();g.moveTo(...glassD);g.lineTo(...glassA);g.stroke();g.restore();
- // Dashboard is a continuous armored bulkhead, with recessed screens, not floating tiles.
- const dashW=p.w*1.72;
- addBox(-dashW/2,3.15,10.4,dashW,3.8,1.55,p.wall,.32);
- addBox(-dashW/2+.35,3.42,10.0,dashW-.7,3.25,.42,p.armor,.28);
- addBox(-dashW/2+.6,3.72,9.72,dashW-1.2,2.72,.25,"#080f18",.22);
- // Each ship gets a different dashboard architecture and display arrangement.
- if(ship===0){
-  // Viper: slim swept instrument wings, paired cyan tactical displays.
-  addBox(-10,5.8,9.6,4.1,.42,.9,p.trim,.24);addBox(5.9,5.8,9.6,4.1,.42,.9,p.trim,.24);
-  screen(-8.8,4.45,9.55,3.2,1.85,"cyan",0);screen(-4.9,4.55,9.55,3.0,1.65,"radar",1);
-  screen(1.9,4.55,9.55,3.0,1.65,"radar",2);screen(5.6,4.45,9.55,3.2,1.85,"cyan",3);
-  addBox(-1.25,3.5,9.4,2.5,2.4,.8,"#102a38",.25);
- }else if(ship===1){
-  // Phantom: hooded central visor, asymmetric violet holographic glass and angular armor.
-  addBox(-9.5,6.2,9.2,19,.55,1.4,"#100e20",.3);
-  addBox(-8.8,6.0,9.0,17.6,.22,.5,p.trim,.2);
-  screen(-8.5,4.35,9.5,4.2,2.0,"violet",0);screen(-3.4,4.1,9.5,6.8,2.35,"radar",1);screen(4.4,4.35,9.5,4.0,2.0,"violet",2);
-  addBox(-1.4,3.35,9.35,2.8,2.75,.8,"#211936",.24);
- }else{
-  // Titan: broad reinforced bulkhead, six rugged displays and a raised command spine.
-  addBox(-11.2,6.0,9.0,22.4,.85,1.6,"#17130f",.36);
-  screen(-10,4.35,9.5,3.0,1.8,"amber",0);screen(-6.4,4.35,9.5,3.0,1.8,"radar",1);
-  screen(-2.8,4.35,9.5,2.7,1.8,"amber",2);screen(.5,4.35,9.5,2.7,1.8,"radar",3);
-  screen(3.8,4.35,9.5,3.0,1.8,"amber",4);screen(7.4,4.35,9.5,3.0,1.8,"radar",5);
-  addBox(-1.1,3.3,9.1,2.2,2.8,1.1,"#54402b",.3);
+ // Space traffic and star streaks stay clipped to the two canopy windows.
+ const clipWindows=()=>{
+  ctx.beginPath();
+  ctx.moveTo(0,160);ctx.lineTo(0,118);ctx.lineTo(105,82);ctx.lineTo(210,105);ctx.lineTo(230,206);ctx.lineTo(0,270);
+  ctx.moveTo(480,160);ctx.lineTo(480,118);ctx.lineTo(375,82);ctx.lineTo(270,105);ctx.lineTo(250,206);ctx.lineTo(480,270);
+  ctx.clip();
+ };
+ ctx.save();clipWindows();
+ const colors=["#8feaff","#ffb45c","#d5e8ff","#50f6ed"];
+ for(let i=0;i<46;i++){
+  const seed=i*127.1+19.7;
+  const x=((seed*13.37+t*(24+(i%5)*19))%(W+80))-40;
+  const y=94+((seed*7.13)%(160));
+  const z=.45+(i%4)*.38;
+  ctx.globalAlpha=fade*(.25+(i%5)*.11);
+  ctx.strokeStyle=colors[i%4];ctx.lineWidth=z;
+  ctx.shadowBlur=i%7===0?9:3;ctx.shadowColor=colors[i%4];
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-7-z*5,y+2+z*2);ctx.stroke();
  }
- // Lower switch banks are bolted into the dashboard lip.
- addBox(-8.2,3.25,8.8,16.4,.52,1.4,"#090f18",.3);
- for(let k=0;k<24;k++){
-  const x=-7.8+k*.68;
-  addBox(x,3.42,8.55,.26,.18,.36,k%4===0?hot:k%3===0?p.trim:"#718294",.12);
+ // Passing ships: short luminous silhouettes at different depths and speeds.
+ for(let i=0;i<5;i++){
+  const x=((i*137+t*(75+i*27))%(W+120))-60;
+  const y=118+(i*31)%105;
+  const scale=.55+(i%3)*.28;
+  ctx.globalAlpha=fade*(.42+(i%2)*.2);
+  ctx.fillStyle=i%2?"#ff9b50":"#a5f4ff";
+  ctx.shadowBlur=14;ctx.shadowColor=ctx.fillStyle;
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+17*scale,y-2*scale);ctx.lineTo(x+29*scale,y);ctx.lineTo(x+17*scale,y+2*scale);ctx.closePath();ctx.fill();
+  ctx.globalAlpha=fade*.48;ctx.fillRect(x-24*scale,y-.65,24*scale,1.3);
  }
- // Forward center console rises continuously from the cockpit floor to the dash.
- addBox(-5.4,.45,4.4,10.8,1.0,5.5,p.wall,.36);
- addBox(-5.0,1.15,4.65,10.0,.32,4.9,p.armor,.28);
- addBox(-4.6,1.38,4.95,9.2,.12,4.25,"#080f18",.2);
- for(let row=0;row<3;row++)for(let col=0;col<14;col++)addBox(-4.25+col*.65,1.55,5.25+row*1.1,.28,.12,.48,(col+row)%5===0?hot:p.trim,.12);
- // Throttle housing is bolted to the center console; the shaft pivots from its socket.
- const lx=ship===2?2.45:1.95, lz=5.15,leverAngle=grab*.52;
- addBox(lx-1.05,1.45,lz-.85,2.1,.5,1.8,"#090f18",.28);
- addBox(lx-.82,1.88,lz-.58,1.64,.24,1.25,p.armor,.22);
- const pivot=project(lx,2.0,lz),tip=project(lx+Math.sin(leverAngle)*.45,4.05-grab*.35,lz-.22);
- g.save();g.lineCap="round";g.strokeStyle="#101821";g.lineWidth=15;g.beginPath();g.moveTo(...pivot);g.lineTo(...tip);g.stroke();
- g.strokeStyle="#aab9c6";g.lineWidth=7;g.beginPath();g.moveTo(...pivot);g.lineTo(...tip);g.stroke();
- g.strokeStyle=p.trim;g.lineWidth=2;g.beginPath();g.moveTo(...pivot);g.lineTo(...tip);g.stroke();
- g.fillStyle="#080d15";g.beginPath();g.ellipse(tip[0],tip[1],13,17,-.25,0,Math.PI*2);g.fill();
- g.fillStyle=mid;g.beginPath();g.ellipse(tip[0]-2,tip[1]-3,9,12,-.25,0,Math.PI*2);g.fill();
- g.restore();
- // Pilot arm grows naturally out of the right-side sleeve; glove reaches and wraps the grip.
- const armStart=project(p.w*.39,2.0,2.5),armMid=project(p.w*.27-approach*1.3,2.45+grab*.25,4.0),hand=project(lx+.15,3.75-grab*.55,lz-.55);
- g.save();g.lineCap="round";g.lineJoin="round";
- g.strokeStyle="#080e17";g.lineWidth=58;g.beginPath();g.moveTo(...armStart);g.lineTo(...armMid);g.lineTo(...hand);g.stroke();
- g.strokeStyle=ship===2?"#746047":ship===1?"#51466f":"#49657a";g.lineWidth=48;g.beginPath();g.moveTo(...armStart);g.lineTo(...armMid);g.lineTo(...hand);g.stroke();
- g.strokeStyle=ship===2?"#b28a55":ship===1?"#9280b8":"#91a9bc";g.lineWidth=25;g.beginPath();g.moveTo(armMid[0]-3,armMid[1]-4);g.lineTo(hand[0]-3,hand[1]-4);g.stroke();
- g.fillStyle=ship===2?"#493827":ship===1?"#322a4b":"#304b60";g.beginPath();g.ellipse(hand[0],hand[1],25,19,-.4,0,Math.PI*2);g.fill();
- g.fillStyle=ship===2?"#a77b49":ship===1?"#8e7bb4":"#8da7bb";
- for(let k=0;k<4;k++){g.beginPath();g.roundRect(hand[0]-12+k*7,hand[1]-7+Math.abs(1.5-k)*2,8,22,4);g.fill();}
- g.fillStyle="#d4e0e8";g.beginPath();g.ellipse(hand[0]-5,hand[1]-13,9,5,-.5,0,Math.PI*2);g.fill();
- g.restore();
- // Mechanical seams, recessed fasteners and edge highlights bind the voxel volumes together.
- voxels.sort((a,b)=>b.z-a.z||a.y-b.y||a.x-b.x);
- g.save();g.globalAlpha=fade;for(const v of voxels)drawVoxel(v);g.restore();
- // Fine material detailing and light reflections are screen-space shading on the solid forms.
- g.save();g.globalAlpha=fade;
- const vignette=g.createRadialGradient(240,330,120,240,330,390);vignette.addColorStop(.45,"rgba(0,0,0,0)");vignette.addColorStop(1,"rgba(0,0,0,.78)");g.fillStyle=vignette;g.fillRect(0,0,rw,rh);
- const sweep=g.createLinearGradient(0,0,rw,rh);sweep.addColorStop(0,"rgba(255,255,255,0)");sweep.addColorStop(.46,ship===1?"rgba(191,155,255,.12)":ship===2?"rgba(255,177,99,.12)":"rgba(103,239,255,.12)");sweep.addColorStop(.52,"rgba(255,255,255,0)");g.fillStyle=sweep;g.fillRect(0,0,rw,rh);
- for(let k=0;k<18;k++){const x=28+k*24;rect(x,18,7,4,k%3?hot:p.trim);rect(x+1,19,3,1,"#fff0cf");}
- g.fillStyle="#f0f6ff";g.font="bold 14px monospace";g.textAlign="center";g.fillText(p.name,240,42);
- g.fillStyle=p.trim;g.font="bold 9px monospace";g.fillText(ship===0?"FLIGHT COMPUTER // TURBINE LINK":ship===1?"STEALTH SYSTEM // PHASE ARRAY":"HEAVY ARMOR // EMP REACTOR",240,57);
- g.fillStyle="#e7edf4";g.font="bold 10px monospace";g.fillText(power>.6?"SYSTEM OVERRIDE: ACTIVE":"PILOT AUTHENTICATION",240,610);
- rect(110,620,260,5,"#26394b");rect(110,620,260*ease(t/3),5,p.trim);
- g.restore();
- if(power>0){g.save();g.globalAlpha=fade*power*.24;const pulse=g.createRadialGradient(240,360,8,240,360,280);pulse.addColorStop(0,p.trim);pulse.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=pulse;g.fillRect(0,0,rw,rh);g.restore();
-  for(let k=0;k<22;k++){const x=(k*67+t*145)%rw,y=(k*83+t*190)%rh;rect(x,y,2+(k%3),2,"#f1ffff");}}
- ctx.save();ctx.globalAlpha=fade;ctx.imageSmoothingEnabled=false;ctx.drawImage(frame,0,0,rw,rh,0,0,W,H);ctx.imageSmoothingEnabled=true;ctx.restore();
+ ctx.restore();
+ // Warm/cool light sweeps travel over the canopy and reflect across the instrument glass.
+ const sweepX=((t*190)%650)-90;
+ ctx.save();ctx.globalAlpha=fade*(.11+.08*Math.sin(t*5));
+ const beam=ctx.createLinearGradient(sweepX-90,0,sweepX+100,0);
+ beam.addColorStop(0,"rgba(255,255,255,0)");beam.addColorStop(.48,"rgba(111,226,255,.72)");beam.addColorStop(1,"rgba(255,255,255,0)");
+ ctx.fillStyle=beam;ctx.fillRect(0,90,480,210);ctx.restore();
+ const pulse=Math.max(0,Math.sin(t*3.8-1.1))**12;
+ if(pulse>.04){
+  ctx.globalAlpha=fade*pulse*.32;
+  const flare=ctx.createRadialGradient(250,195,2,250,195,250);
+  flare.addColorStop(0,"rgba(255,225,170,.72)");flare.addColorStop(.35,"rgba(96,205,255,.18)");flare.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=flare;ctx.fillRect(0,80,480,480);
+ }
+ // Fine cockpit glints and instrument reflections, without covering the reference.
+ ctx.globalAlpha=fade*(.2+.12*Math.sin(t*9));
+ ctx.fillStyle="#b9f5ff";
+ for(let i=0;i<14;i++){const x=24+(i*71)%432,y=270+(i*43)%330;ctx.fillRect(x,y,1.5,1.5);}
+ ctx.restore();
 }
 function draw(){ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;ctx.drawImage(backdrop,0,0,W,H);ctx.imageSmoothingEnabled=true;ctx.strokeStyle="#1b2945";ctx.globalAlpha=.28;ctx.lineWidth=1;for(let x=0;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}ctx.globalAlpha=1;
  obstacles.forEach(o=>{ctx.shadowBlur=13;ctx.shadowColor=o.type==="mine"?"#ff4e9b":"#9ba8cc";drawStack(o.type==="mine"?mine:rock,o.x+o.w/2,o.y+o.h/2,o.w,o.spin?o.angle:0);});ctx.shadowBlur=0;

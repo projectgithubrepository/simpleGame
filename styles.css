@@ -34,3 +34,5 @@ button,canvas{touch-action:manipulation}
 .mobile-controls button,#special-button{touch-action:none;-webkit-user-select:none;user-select:none}
 #special-button{min-height:42px;padding:9px 12px;border:1px solid #50f6ed;border-radius:9px;background:#153449;color:#50f6ed;font-size:10px;font-weight:900;letter-spacing:.04em;cursor:pointer}
 #special-button:disabled{opacity:.48;cursor:not-allowed}
+
+.special-help{margin:2px 3px 8px;color:#b7c6e5;font-size:10px;line-height:1.45;text-align:center;letter-spacing:.02em}.powerup-bar{margin-top:3px}
